@@ -1,6 +1,7 @@
 import requests
 import sys
 import time
+import yaml
 
 ## Load Server configs from yaml
 with open('config.yml', 'r') as file:

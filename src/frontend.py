@@ -15,7 +15,7 @@ CATALOG_IP = config['catalog']
 
 ## Search for the requested topic
 @app.route("/search/<topic>", methods = ["GET"])
-def search(topic)
+def search(topic):
     books = requests.get(CATALOG_IP + '/search/' + topic).json()
 
     # Parse the json of the search result
@@ -29,7 +29,7 @@ def search(topic)
 
 ## Lookup the requested item number
 @app.route("/lookup/<item_number>")
-def lookup(item_number)
+def lookup(item_number):
     books = requests.get(CATALOG_IP + '/lookup/' + item_number).json()
 
     # Parse the lookup result
@@ -50,7 +50,7 @@ def buy(item_number):
     # Use the 'status' boolean in json to check if the purchase was successful
     if response["status"]:
         return "Successfully purchased: " + response["title"] + "\n"
-    else
+    else:
         return "Faile to purchase: " + response["title"] + "\n"
 
 if __name__ == "__main__":
