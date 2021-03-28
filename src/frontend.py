@@ -29,6 +29,7 @@ def search(topic)
 
 ## Lookup the requested item number
 @app.route("/lookup/<item_number>")
+def lookup(item_number)
     books = requests.get(CATALOG_IP + '/lookup/' + item_number).json()
 
     # Parse the lookup result
