@@ -16,7 +16,7 @@ CATALOG_IP = config['catalog']
 ## Search for the requested topic
 @app.route("/search/<topic>", methods = ["GET"])
 def search(topic):
-    books = requests.get(CATALOG_IP + '/search/' + topic).json()
+    books = requests.get(CATALOG_IP + '/query/' + topic).json()
 
     # Parse the json of the search result
     search_result = []
@@ -30,7 +30,7 @@ def search(topic):
 ## Lookup the requested item number
 @app.route("/lookup/<item_number>")
 def lookup(item_number):
-    books = requests.get(CATALOG_IP + '/lookup/' + item_number).json()
+    books = requests.get(CATALOG_IP + '/query/' + item_number).json()
 
     # Parse the lookup result
     lookup_result = []
