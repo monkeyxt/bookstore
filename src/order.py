@@ -30,8 +30,12 @@ def buy(item_number=None, topic=None):
     # first get the number that exist - note:
     num_items_response = requests.post(CATALOG_IP + '/query/', json=item_query).json()
 
+    if len(num_items_response.keys()) == 0:
+        return {"status": False}
+
     # no topic, reuse item_number
-    book, amount = num_items_response.items()[0]
+    book = list(num_items_response.keys())[0]
+    amount = list(num_items_response.values())[0]["item_number"]
 
     # create update payload
     update_payload = {}
