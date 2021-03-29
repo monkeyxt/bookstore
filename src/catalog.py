@@ -16,14 +16,26 @@ ORDER_IP = config['order']
 CATALOG_IP = config['catalog']
 
 books = {
+    "How to get a good grade in 677 in 20 minutes a day": {
+        "item_number": 1,
+        "topic": "systems",
+        "stock": 11,
+        "price": 3
+    },
     "RPC for Dummies": {
-        "item_number": 345,
+        "item_number": 2,
         "topic": "systems",
         "stock": 7,
         "price": 4
     },
+    "Xen and the Art of Surviving Graduate School": {
+        "item_number": 3,
+        "topic": "gradschool",
+        "stock": 2,
+        "price": 15
+    },
     "Cooking for the Impatient Graduate Student": {
-        "item_number": 359,
+        "item_number": 4,
         "topic": "gradschool",
         "stock": 10,
         "price": 5
@@ -85,7 +97,9 @@ topic_query = {"topic": "gradschool"}
 update_data = {
     "New Book": {
         "item_number": 100,
-        "topic": "test_topic"
+        "topic": "test_topic",
+        "stock": 1000,
+        "price": 1
     }
 }
 with open('config.yml', 'r') as file:
