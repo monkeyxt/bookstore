@@ -2,6 +2,7 @@ from flask import Flask, request
 import requests
 import yaml
 import json
+import threading
 
 ## Define Flask frontend
 app = Flask("catalog")
@@ -17,23 +18,23 @@ CATALOG_IP = config['catalog']
 books = {
     "RPC for Dummies": {
         "item_number": 345,
-        "topic": "systems"
+        "topic": "systems",
+        "stock": 7,
+        "price": 4
     },
     "Cooking for the Impatient Graduate Student": {
         "item_number": 359,
-        "topic": "gradschool"
+        "topic": "gradschool",
+        "stock": 10,
+        "price": 5
     }
 }
 
-@app.route("/testing/", methods = ["GET"])
-def testing():
-    data = json.loads(request.data)
-    print(data)
-    return {"get": "fucked"}
+books_lock = threading.Lock()
 
 ## Query endpoint
 # Include a data payload with the request (ex: {"item_number": 100})
-@app.route("/query/", methods = ["GET"])
+@app.route("/query/", methods = ["POST"])
 def query():
     output = {}
     query_data = json.loads(request.data)
@@ -48,6 +49,7 @@ def query():
         for key, value in books.items():
             if value["item_number"] == item_number:
                 output[key] = value
+
     if len(output) == 0:
             print("No matches found")
 
@@ -60,13 +62,16 @@ def query():
 @app.route("/update/", methods = ["POST"])
 def update():
     update_data = json.loads(request.data)
-    for key, value in update_data.items():
-        books[key] = value
+
+    with books_lock:
+        for key, value in update_data.items():
+            books[key] = value
+
     return {"Success": True}
 
 if __name__ == "__main__":
     CATALOG_PORT = config['catalog'].split(":")[2]
-    app.run(host='0.0.0.0',port = CATALOG_PORT)
+    app.run(host='0.0.0.0',port = CATALOG_PORT, threaded=True)
 
 # The code below can be pasted into the python shell as set up
 # before interacting with the API
@@ -91,6 +96,6 @@ update_path = f"{config['catalog']}/update"
 """
 # Sample request bodies
 """
-r = requests.get(query_path, data=json.dumps(query_data))
+r = requests.post(query_path, data=json.dumps(query_data))
 response_contents = json.loads(r.content)
 """
