@@ -14,7 +14,7 @@ ORDER_IP = config['order']
 CATALOG_IP = config['catalog']
 
 ## Buy the requested item number
-@app.route("/buy/<int:item_number>")
+@app.route("/buy/<int:item_number>", methods = ["POST"])
 def buy(item_number=None, topic=None):
 
     item_query = {
