@@ -35,11 +35,14 @@ def buy(item_number=None, topic=None):
 
     # no topic, reuse item_number
     book = list(num_items_response.keys())[0]
-    amount = list(num_items_response.values())[0]["item_number"]
+    amount = list(num_items_response.values())[0]["stock"]
 
     # create update payload
     update_payload = {}
-    update_payload[book] = amount-1
+    update_payload[book] = num_items_response[book]
+    if update_payload[book]["stock"] <= 0:
+        return {"status": False}
+    update_payload[book]["stock"] -= 1
 
     response = requests.post(CATALOG_IP + '/update/', json=update_payload).json()
 
