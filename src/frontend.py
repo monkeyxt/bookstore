@@ -56,7 +56,7 @@ def lookup(item_number):
 # Buy the requested item number
 @app.route("/buy/<item_number>")
 def buy(item_number):
-    response = requests.get(ORDER_IP + '/buy/' + item_number).json()
+    response = requests.post(ORDER_IP + '/buy/' + item_number).json()
 
     # Use the 'status' boolean in json to check if the purchase was successful
     if response["status"]:
