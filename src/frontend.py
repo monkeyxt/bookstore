@@ -34,7 +34,7 @@ def search(topic):
 
 
 # Lookup the requested item number
-@app.route("/lookup/<item_number>")
+@app.route("/lookup/<int:item_number>")
 def lookup(item_number):
 
     item_query = {
