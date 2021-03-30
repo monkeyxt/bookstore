@@ -15,6 +15,7 @@ FRONTEND_IP = config['frontend']
 ORDER_IP = config['order']
 CATALOG_IP = config['catalog']
 
+# Initial setting for the books catalog
 books = {
     "How to get a good grade in 677 in 20 minutes a day": {
         "item_number": 1,
@@ -49,6 +50,7 @@ books_lock = threading.Lock()
 @app.route("/query/", methods = ["POST"])
 def query():
     output = {}
+    # If the request payload specifies a topic, grab all entires that match that topic
     query_data = json.loads(request.data)
     if "topic" in query_data.keys():
         topic = query_data["topic"]
@@ -56,12 +58,14 @@ def query():
             if value["topic"] == topic:
                 output[key] = value
 
+    # If the request payload specifies an item number, grab all entries with that item number
     elif "item_number" in query_data.keys():
         item_number = query_data["item_number"]
         for key, value in books.items():
             if value["item_number"] == item_number:
                 output[key] = value
 
+    # If no matches are found in the search, print a message
     if len(output) == 0:
             print("No matches found")
 
@@ -75,6 +79,7 @@ def query():
 def update():
     update_data = json.loads(request.data)
 
+    # Acquire the lock and update the book entries as specified
     with books_lock:
         for key, value in update_data.items():
             books[key] = value
