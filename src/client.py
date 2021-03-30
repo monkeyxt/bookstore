@@ -1,6 +1,5 @@
 import requests
 import sys
-import time
 import yaml
 
 # Load Server configs from yaml
@@ -12,6 +11,7 @@ FRONTEND_IP = config['frontend']
 
 # Search the requested topic
 def search(topic):
+    print(topic)
     search_output = requests.get(FRONTEND_IP + '/search/' + topic).text
     print(search_output)
     return search_output
