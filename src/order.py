@@ -1,4 +1,5 @@
 from flask import Flask, request
+import time
 import requests
 import yaml
 
@@ -16,6 +17,8 @@ CATALOG_IP = config['catalog']
 ## Buy the requested item number
 @app.route("/buy/<int:item_number>", methods = ["POST"])
 def buy(item_number=None, topic=None):
+
+    buystart = time.process_time()
 
     item_query = {
         "item_number": item_number
@@ -46,11 +49,19 @@ def buy(item_number=None, topic=None):
 
     response = requests.post(CATALOG_IP + '/update/', json=update_payload).json()
 
+    buy_elapsed = time.process_time() - buystart
+
     # Use the 'status' boolean in json to check if the purchase was successful
     if response["Success"]:
-        return {"status": True}
+        return {
+            "status": True,
+            "elapsed_time": buy_elapsed
+        }
     else:
-        return {"status": False}
+        return {
+            "status": False,
+            "elapsed_time": buy_elapsed
+        }
 
 if __name__ == "__main__":
     ORDER_PORT = config['order'].split(":")[2]

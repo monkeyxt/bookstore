@@ -58,12 +58,14 @@ def lookup(item_number):
 def buy(item_number):
     response = requests.post(ORDER_IP + '/buy/' + item_number).json()
 
+
     # Use the 'status' boolean in json to check if the purchase was successful
     if response["status"]:
-        return "Successfully purchased: " + str(item_number) + "\n"
+        return "Successfully purchased: " + str(item_number) + "\n" + \
+            "Elapsed time: " + str(response["elapsed_time"])
     else:
-        return "Failed to purchase: " + str(item_number) + "\n"
-
+        return "Failed to purchase: " + str(item_number) + "\n" + \
+            "Elapsed time: " + str(response["elapsed_time"])
 
 if __name__ == "__main__":
     FRONTEND_PORT = config['frontend'].split(":")[2]
