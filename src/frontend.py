@@ -1,6 +1,7 @@
 from flask import Flask
 import requests
 import yaml
+import logging
 
 # Define Flask frontend
 app = Flask("frontend")
@@ -68,5 +69,9 @@ def buy(item_number):
             "Elapsed time: " + str(response["elapsed_time"])
 
 if __name__ == "__main__":
+    log_path = "../logs/frontend.txt"
+    open(log_path, "w").close()
+    logging.basicConfig(filename=log_path, level=logging.DEBUG, format="%(asctime)s %(message)s")
+    logging.info("Frontend server started")
     FRONTEND_PORT = config['frontend'].split(":")[2]
     app.run(host='0.0.0.0', port=FRONTEND_PORT)

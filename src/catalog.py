@@ -3,6 +3,7 @@ import requests
 import yaml
 import json
 import threading
+import logging
 
 ## Define Flask frontend
 app = Flask("catalog")
@@ -54,6 +55,7 @@ def query():
     query_data = json.loads(request.data)
     if "topic" in query_data.keys():
         topic = query_data["topic"]
+        logging.info(f"Querying for topic: {topic}")
         for key, value in books.items():
             if value["topic"] == topic:
                 output[key] = value
@@ -61,6 +63,7 @@ def query():
     # If the request payload specifies an item number, grab all entries with that item number
     elif "item_number" in query_data.keys():
         item_number = query_data["item_number"]
+        logging.info(f"Querying for item number: {item_number}")
         for key, value in books.items():
             if value["item_number"] == item_number:
                 output[key] = value
@@ -78,7 +81,7 @@ def query():
 @app.route("/update/", methods = ["POST"])
 def update():
     update_data = json.loads(request.data)
-
+    logging.info(f"Updating items: {list(update_data.keys())}")
     # Acquire the lock and update the book entries as specified
     with books_lock:
         for key, value in update_data.items():
@@ -87,6 +90,10 @@ def update():
     return {"Success": True}
 
 if __name__ == "__main__":
+    log_path = "../logs/catalog.txt"
+    open(log_path, "w").close()
+    logging.basicConfig(filename=log_path, level=logging.DEBUG, format="%(asctime)s %(message)s")
+    logging.info("Catalog server started")
     CATALOG_PORT = config['catalog'].split(":")[2]
     app.run(host='0.0.0.0',port = CATALOG_PORT, threaded=True)
 
