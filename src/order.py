@@ -18,7 +18,7 @@ CATALOG_IP = config['catalog']
 ## Buy the requested item number
 @app.route("/buy/<int:item_number>", methods = ["POST"])
 def buy(item_number=None, topic=None):
-    logging.info(f"Attempting buy of item: {item_number}")
+    logging.info(f"Attempting to buy item: {item_number}")
     buystart = time.process_time()
 
     item_query = {

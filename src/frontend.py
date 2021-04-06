@@ -18,7 +18,7 @@ CATALOG_IP = config['catalog']
 # Search for the requested topic
 @app.route("/search/<topic>")
 def search(topic):
-
+    logging.info(f"Searching for topic: {topic}")
     topic_query = {
         "topic": topic
     }
@@ -37,7 +37,7 @@ def search(topic):
 # Lookup the requested item number
 @app.route("/lookup/<int:item_number>")
 def lookup(item_number):
-
+    logging.info(f"Looking up item: {item_number}")
     item_query = {
         "item_number": item_number
     }
@@ -57,14 +57,16 @@ def lookup(item_number):
 # Buy the requested item number
 @app.route("/buy/<item_number>")
 def buy(item_number):
+    logging.info(f"Attempting to buy item: {item_number}")
     response = requests.post(ORDER_IP + '/buy/' + item_number).json()
-
 
     # Use the 'status' boolean in json to check if the purchase was successful
     if response["status"]:
+        logging.info("Success")
         return "Successfully purchased: " + str(item_number) + "\n" + \
             "Elapsed time: " + str(response["elapsed_time"])
     else:
+        logging.error("Purchase Failed")
         return "Failed to purchase: " + str(item_number) + "\n" + \
             "Elapsed time: " + str(response["elapsed_time"])
 
