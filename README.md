@@ -1,9 +1,6 @@
 # bookstore
 Book store lab 2 for CS 677
 
-# Bazaar
-P2P bazaar for CS 677
-
 ## Requirements
 - Python 3
 - Flask
