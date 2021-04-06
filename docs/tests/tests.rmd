@@ -101,7 +101,7 @@ $ bash TestRaceCondition.sh > 1.txt
 $ grep -o -c Failed 1.txt
 $ grep -o -c Successfully 1.txt
 ```
-\noindent The first `grep` command returns 200 and second returns 100. Thus the program works as designed to handle concurrent requests.
+\noindent The first `grep` command returns 200 and second returns 100. Thus the program works as designed to handle concurrent requests. For other tests, see the performance evaluation section.
 
 <!--
 # References
