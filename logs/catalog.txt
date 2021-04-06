@@ -1,6 +1,0 @@
-2021-04-05 20:13:59,014 Catalog server started
-2021-04-05 20:13:59,017  * Running on http://0.0.0.0:5003/ (Press CTRL+C to quit)
-2021-04-05 20:14:02,164 Querying for item number: 4
-2021-04-05 20:14:02,164 127.0.0.1 - - [05/Apr/2021 20:14:02] "[37mPOST /query/ HTTP/1.1[0m" 200 -
-2021-04-05 20:14:02,166 Updating items: ['Cooking for the Impatient Graduate Student']
-2021-04-05 20:14:02,166 127.0.0.1 - - [05/Apr/2021 20:14:02] "[37mPOST /update/ HTTP/1.1[0m" 200 -
