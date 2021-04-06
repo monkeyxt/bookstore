@@ -76,7 +76,7 @@ def buy(item_number):
             "\n" + "Elapsed time (frontend server): " + str(frontend_buy_elapsed)
 
 if __name__ == "__main__":
-    log_path = "../logs/frontend.txt"
+    log_path = "logs/frontend.txt"
     open(log_path, "w").close()
     logging.basicConfig(filename=log_path, level=logging.DEBUG, format="%(asctime)s %(message)s")
     logging.info("Frontend server started")

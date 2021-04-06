@@ -90,7 +90,7 @@ def update():
     return {"Success": True}
 
 if __name__ == "__main__":
-    log_path = "../logs/catalog.txt"
+    log_path = "logs/catalog.txt"
     open(log_path, "w").close()
     logging.basicConfig(filename=log_path, level=logging.DEBUG, format="%(asctime)s %(message)s")
     logging.info("Catalog server started")

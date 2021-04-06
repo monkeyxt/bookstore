@@ -77,7 +77,7 @@ def buy(item_number=None, topic=None):
         }
 
 if __name__ == "__main__":
-    log_path = "../logs/order.txt"
+    log_path = "logs/order.txt"
     open(log_path, "w").close()
     logging.basicConfig(filename=log_path, level=logging.DEBUG, format="%(asctime)s %(message)s")
     logging.info("Order server started")
