@@ -59,9 +59,9 @@ def lookup(item_number):
 @app.route("/buy/<item_number>")
 def buy(item_number):
     logging.info(f"Attempting to buy item: {item_number}")
-    frontend_buy_start = time.process_time()
+    frontend_buy_start = time.perf_counter_ns()
     response = requests.post(ORDER_IP + '/buy/' + item_number).json()
-    frontend_buy_elapsed = time.process_time() - frontend_buy_start
+    frontend_buy_elapsed = time.perf_counter_ns() - frontend_buy_start
 
     # Use the 'status' boolean in json to check if the purchase was successful
     if response["status"]:

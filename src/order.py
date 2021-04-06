@@ -19,7 +19,7 @@ CATALOG_IP = config['catalog']
 @app.route("/buy/<int:item_number>", methods = ["POST"])
 def buy(item_number=None, topic=None):
     logging.info(f"Attempting to buy item: {item_number}")
-    buystart = time.process_time()
+    buystart = time.perf_counter_ns()
 
     item_query = {
         "item_number": item_number
@@ -34,7 +34,7 @@ def buy(item_number=None, topic=None):
     # first get the number that exist - note:
     num_items_response = requests.post(CATALOG_IP + '/query/', json=item_query).json()
 
-    buy_elapsed = time.process_time() - buystart
+    buy_elapsed = time.perf_counter_ns() - buystart
     if len(num_items_response.keys()) == 0:
         logging.error("Item not found")
         return {
@@ -49,7 +49,7 @@ def buy(item_number=None, topic=None):
     # create update payload
     update_payload = {}
     update_payload[book] = num_items_response[book]
-    buy_elapsed = time.process_time() - buystart
+    buy_elapsed = time.perf_counter_ns() - buystart
     if update_payload[book]["stock"] <= 0:
         logging.error("Item not in stock")
         return {
@@ -60,7 +60,7 @@ def buy(item_number=None, topic=None):
 
     response = requests.post(CATALOG_IP + '/update/', json=update_payload).json()
 
-    buy_elapsed = time.process_time() - buystart
+    buy_elapsed = time.perf_counter_ns() - buystart
 
     # Use the 'status' boolean in json to check if the purchase was successful
     if response["Success"]:
