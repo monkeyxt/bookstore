@@ -15,6 +15,13 @@ FRONTEND_IP = config['frontend']
 ORDER_IP = config['order']
 CATALOG_IP = config['catalog']
 
+book_titles = {
+    1: "How to get a good grade in 677 in 20 minutes a day",
+    2: "RPC for Dummies",
+    3: "Xen and the Art of Surviving Graduate School",
+    4: "Cooking for the Impatient Graduate Student"
+}
+
 perf_logger = logging.getLogger("perf")
 perf_logger.setLevel(logging.DEBUG)
 perf_file_handler = logging.FileHandler('frontendperf.log')
@@ -47,7 +54,8 @@ def search(topic):
 # Lookup the requested item number
 @app.route("/lookup/<int:item_number>")
 def lookup(item_number):
-    logging.info(f"Looking up item: {item_number}")
+    title = book_titles[item_number]
+    logging.info(f"Looking up item: {title}")
     item_query = {
         "item_number": item_number
     }
@@ -71,7 +79,8 @@ def lookup(item_number):
 # Buy the requested item number
 @app.route("/buy/<item_number>")
 def buy(item_number):
-    logging.info(f"Attempting to buy item: {item_number}")
+    title = book_titles[item_number]
+    logging.info(f"Attempting to buy item: {title}")
     frontend_buy_start = time.perf_counter_ns()
     response = requests.post("http://" + ORDER_IP + '/buy/' + item_number).json()
     frontend_buy_elapsed = time.perf_counter_ns() - frontend_buy_start
@@ -82,12 +91,12 @@ def buy(item_number):
     # Use the 'status' boolean in json to check if the purchase was successful
     if response["status"]:
         logging.info("Success")
-        return "Successfully purchased: " + str(item_number) + "\n" + \
+        return "Successfully purchased: " + str(title) + "\n" + \
             "Elapsed time (buy, order server): " + str(response["elapsed_time"]) + \
             "\n" + "Elapsed time (buy, frontend server): " + str(frontend_buy_elapsed)
     else:
         logging.error("Purchase Failed")
-        return "Failed to purchase: " + str(item_number) + "\n" + \
+        return "Failed to purchase: " + str(title) + "\n" + \
             "Elapsed time (buy, order server): " + str(response["elapsed_time"]) + \
             "\n" + "Elapsed time (buy, frontend server): " + str(frontend_buy_elapsed)
 
