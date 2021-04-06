@@ -16,27 +16,24 @@ echo "Target Server for Frontend: "$frontend_ip
 ssh -i $KEY -l ${USERNAME} ${frontend_ip} "sudo yum install python3 -y && sudo pip3 install pyyaml requests flask"
 ssh -i $KEY -l ${USERNAME} ${frontend_ip} "mkdir -p logs"
 scp -i $KEY "../src/frontend.py" ${USERNAME}@${frontend_ip}:~
-scp -i $KEY "../src/config.yml" ${USERNAME}@${frontend_ip}:~
-ssh -i $KEY -l ${USERNAME} ${frontend_ip} "python3 frontend.py &"
-frontend_pid=$(ssh -i $KEY -l ${USERNAME} ${frontend_ip} "echo \$!")
+scp -i $KEY $config ${USERNAME}@${frontend_ip}:~
+frontend_pid=($(ssh -i $KEY -l ${USERNAME} ${frontend_ip} "python3 frontend.py &> frontend_log.txt & echo \$! &"))
 echo $frontend_pid
 
 echo "Target Server for Order: "$order_ip
 ssh -i $KEY -l ${USERNAME} ${order_ip} "sudo yum install python3 -y && sudo pip3 install pyyaml requests flask"
 ssh -i $KEY -l ${USERNAME} ${order_ip} "mkdir -p logs"
 scp -i $KEY "../src/order.py" ${USERNAME}@${order_ip}:~
-scp -i $KEY "../src/config.yml" ${USERNAME}@${order_ip}:~
-ssh -i $KEY -l ${USERNAME} ${order_ip} "python3 order.py &"
-order_pid=$(ssh -i $KEY -l ${USERNAME} ${order_ip} "echo \$!")
+scp -i $KEY $config ${USERNAME}@${order_ip}:~
+order_pid=($(ssh -i $KEY -l ${USERNAME} ${order_ip} "python3 order.py &> order_log.txt & echo \$! &"))
 echo $order_pid
 
-echo "Target Server for Frontend: "$catalog_ip
+echo "Target Server for Catalog: "$catalog_ip
 ssh -i $KEY -l ${USERNAME} ${catalog_ip} "sudo yum install python3 -y && sudo pip3 install pyyaml requests flask"
 ssh -i $KEY -l ${USERNAME} ${catalog_ip} "mkdir -p logs"
 scp -i $KEY "../src/catalog.py" ${USERNAME}@${catalog_ip}:~
-scp -i $KEY "../src/config.yml" ${USERNAME}@${catalog_ip}:~
-ssh -i $KEY -l ${USERNAME} ${catalog_ip} "python3 catalog.py &"
-catalog_pid=$(ssh -i $KEY -l ${USERNAME} ${catalog_ip} "echo \$!")
+scp -i $KEY $config ${USERNAME}@${catalog_ip}:~
+catalog_pid=($(ssh -i $KEY -l ${USERNAME} ${catalog_ip} "python3 catalog.py &> catalog_log.txt & echo \$! &"))
 echo $catalog_pid
 
 function kill_servers() {
@@ -45,3 +42,5 @@ function kill_servers() {
     ssh -i $KEY -l ${USERNAME} ${catalog_ip} "kill $catalog_pid"
 }
 trap kill_servers INT TERM EXIT
+
+sleep infinity

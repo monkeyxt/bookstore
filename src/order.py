@@ -80,6 +80,6 @@ if __name__ == "__main__":
     log_path = "logs/order.txt"
     open(log_path, "w").close()
     logging.basicConfig(filename=log_path, level=logging.DEBUG, format="%(asctime)s %(message)s")
-    logging.info("Order server started")
-    ORDER_PORT = config['order'].split(":")[2]
+    ORDER_PORT = config['order'].split(":")[-1]
+    logging.info(f"Order server starting on port {ORDER_PORT}")
     app.run(host='0.0.0.0',port = ORDER_PORT)

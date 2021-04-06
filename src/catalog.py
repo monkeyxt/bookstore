@@ -93,8 +93,8 @@ if __name__ == "__main__":
     log_path = "logs/catalog.txt"
     open(log_path, "w").close()
     logging.basicConfig(filename=log_path, level=logging.DEBUG, format="%(asctime)s %(message)s")
-    logging.info("Catalog server started")
-    CATALOG_PORT = config['catalog'].split(":")[2]
+    CATALOG_PORT = config['catalog'].split(":")[-1]
+    logging.info(f"Catalog server starting on port {CATALOG_PORT}")
     app.run(host='0.0.0.0',port = CATALOG_PORT, threaded=True)
 
 # The code below can be pasted into the python shell as set up

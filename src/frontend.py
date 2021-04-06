@@ -95,6 +95,6 @@ if __name__ == "__main__":
     log_path = "logs/frontend.txt"
     open(log_path, "w").close()
     logging.basicConfig(filename=log_path, level=logging.DEBUG, format="%(asctime)s %(message)s")
-    logging.info("Frontend server started")
-    FRONTEND_PORT = config['frontend'].split(":")[2]
+    FRONTEND_PORT = config['frontend'].split(":")[-1]
+    logging.info(f"Frontend server starting on port {FRONTEND_PORT}")
     app.run(host='0.0.0.0', port=FRONTEND_PORT)
