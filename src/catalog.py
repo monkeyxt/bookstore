@@ -21,25 +21,25 @@ books = {
     "How to get a good grade in 677 in 20 minutes a day": {
         "item_number": 1,
         "topic": "systems",
-        "stock": 11,
+        "stock": 1011,
         "price": 3
     },
     "RPC for Dummies": {
         "item_number": 2,
         "topic": "systems",
-        "stock": 7,
+        "stock": 1007,
         "price": 4
     },
     "Xen and the Art of Surviving Graduate School": {
         "item_number": 3,
         "topic": "gradschool",
-        "stock": 2,
+        "stock": 1002,
         "price": 15
     },
     "Cooking for the Impatient Graduate Student": {
         "item_number": 4,
         "topic": "gradschool",
-        "stock": 10,
+        "stock": 100,
         "price": 5
     }
 }

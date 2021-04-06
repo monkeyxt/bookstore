@@ -11,11 +11,11 @@ header-includes:
   -  \usepackage{hyperref}
   -  \usepackage{graphicx}
 biblio-style: apsr
-title: "CS 677 Lab 1 Test Report"
+title: "CS 677 Lab 2 Test Report"
 author:
 - name: Dan Cline, Kyle Stevens, Tian Xia
   affiliation: UMass Amherst
-abstract: "This document is a report of all the tests ran on the system, and presents sample outputs of each test. To reproduce the results of the tests,  run `runtest.sh` in the `test` directory on some `networkconfig.yml`."
+abstract: "This document is a report of all the tests ran on the system, and presents sample outputs of each test."
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 geometry: margin=1in
 fontfamily: mathpazo
@@ -34,7 +34,7 @@ knitr::opts_chunk$set(cache=TRUE,
                       if (file.rename(x, x2)) x2 else x
                       })
 
-defOut <- knitr::knit_hooks$get("plot")  # save the default plot hook 
+defOut <- knitr::knit_hooks$get("plot")  # save the default plot hook
 knitr::knit_hooks$set(plot = function(x, options) {  # set new plot hook ...
   x <- defOut(x, options)  # first apply the default hook
   if(!is.null(options$wrapfigure)) {  # then, if option wrapfigure is given ...
@@ -50,191 +50,58 @@ library(DiagrammeR)
 ```
 
 
-# Test 1
+# Catalog Server Unit Tests
 
-Test Description: Assign one peer to be a buyer of fish and another to be a seller of fish. Ensure that all fish is sold and restocked forever. In `test1config.yml`, the number of fishes for the seller node is assigned to 10 and the unlimited flag is set to true, so that fish is sold throughout.
-\newline
+Test Description: All three servers are up running remotely. Run `TestCatalog.py` in the `tests/unit`. Make sure that the dictionary fields in the unit test is the same as the remote server on initialization. The goal is to make sure that the catalog server functions are working. There are three units in this test:
 
-\noindent Node Assignment:
+- `test_query_by_topic`: make sure that querying by topic returns the correct dictionaries.
+- `test_query_by_item`: make sure that the results for item querying returns correctly the `price`, `topic`, `item_id` and `amount` field.
+- `test_update`: make sure that the changing the price and stock of the items yields the correct value.
 
-nodes       address            role                sell                buy
---------    ----------------   ----------------    ----------------    ----------------
-node0       localhost:10000    seller              fish (unlimited)    N/A
-node1       localhost:10001    buyer               N/A                 fish
----------   ----------------   ----------------    ----------------    ----------------
+\noindent Program Output:
 
-\noindent Network Topology:
-\newline
+```{}
+PASSED: Query by item_id yields correct keys
+.PASSED: Query by topic yields correct dictionaries
+.PASSED: Decrease stock & price operation correct
+.
+----------------------------------------------------------------------
+Ran 3 tests in 0.011s
 
-```{r echo=FALSE, dev='png', out.width="20%", fig.align='center'}
-library("DiagrammeR")
-grViz("
-      digraph test {
-        rankdir=LR;
-        node [shape = circle]
-        0, 1
-        0 -> 1 [arrowhead = none];
-      }
- ")
+OK
+
 ```
 
-\noindent Program Behaviour: Buyer node `node1` continuously buys from seller node `node0`. The number of fish remaining for the seller goes from 10 to 0 and gets restocked once it hits 0.
+# Order Server Unit Tests
 
-# Test 2
+Test Description: All three servers are up running remotely. Run `TestOrder.py` in the `tests/unit`. The goal is to make sure that the order server functions are working. There is one unit in this test:
 
-Test Description: Assign one peer to be a buyer of fish and another to be a seller of fish and boar. Ensure that all fish is sold and restocked forever, but no boar is sold. In `test2config.yml`, the number of fishes for the seller node is assigned to 10 and the unlimited flag is set to true, so that fish is sold throughout. The number of boars for the seller node is also set to 10.
-\newline
+- `test_buy`: makes sure that only one item is left for an `item_id`. The first buy should be successful and the second should fail.
 
-\noindent Node Assignment:
+\noindent Program Output:
 
-nodes       address            role                sell                buy
---------    ----------------   ----------------    ----------------    ----------------
-node0       localhost:10000    seller              fish/boar           N/A
-node1       localhost:10001    buyer               N/A                 fish
----------   ----------------   ----------------    ----------------    ----------------
+```{}
+PASSED: Buy with positive stock successful
+PASSED: Buy with zero stock unsuccessful
+.
+----------------------------------------------------------------------
+Ran 1 test in 0.017s
 
-\noindent Network Topology:
-\newline
-
-```{r echo=FALSE, dev='png', out.width="20%", fig.align='center'}
-library("DiagrammeR")
-grViz("
-      digraph test {
-        rankdir=LR;
-        node [shape = circle]
-        0, 1
-        0 -> 1 [arrowhead = none];
-      }
- ")
+OK
 ```
 
-\noindent Program Behaviour: Buyer node `node1` continuously buys from seller node `node0`. The number of fish remaining for the seller goes from 10 to 0 and gets restocked once it hits 0. No boar is sold to `node1`.
+# Concurrent Buy Tests
 
-# Test 3
-
-Randomly assign buyer and seller roles. Ensure that items keep being sold throughout. In `test3config.yml`, the roles of the two nodes are set to `random`. The number of salt for the seller node is assigned to 1 and the unlimited flag is set to true, so that salt is sold throughout. The buyer target for the randomly chosen buyer node is set to salt. 
+Test Description: All the three servers are up running remotely. The goal is verify that concurrent requests are processed correctly, returning success and failure messages and that no client makes illegal stock decrements. The test spawns 3 clients which each concurrently make 100 buy requests to item 4, which is initialized to have 100 items. Only 100 items should be sold. The test can be found in `tests/concurrent/TestRaceCondition.sh`
 \newline
 
-\noindent Node Assignment:
-
-nodes       address            role                sell                buy
---------    ----------------   ----------------    ----------------    ----------------
-node0       localhost:10000    random              salt(unlimited)     N/A
-node1       localhost:10001    random              N/A                 salt
----------   ----------------   ----------------    ----------------    ----------------
-
-\noindent Network Topology:
-\newline
-
-```{r echo=FALSE, dev='png', out.width="20%", fig.align='center'}
-library("DiagrammeR")
-grViz("
-      digraph test {
-        rankdir=LR;
-        node [shape = circle]
-        0, 1
-        0 -> 1 [arrowhead = none];
-      }
- ")
+\noindent Program Output: We run the script and count the number of fails and successes:
+```{}
+$ bash TestRaceCondition.sh > 1.txt
+$ grep -o -c Failed 1.txt
+$ grep -o -c Successfully 1.txt
 ```
-
-\noindent Program Behaviour: Salt is sold throughout and restocked if one node is a buyer and the other is a seller. No products are sold if both nodes have the same role.
-
-# Test 4
-
-One seller of boar, 3 buyers of boars, the remaining peers have no role. Fix the neighborhood structure so that buyers and sellers are 2-hop away in the peer-to-peer overlay network. Ensure that all items are sold and restocked and that all buyers can buy forever.
-\newline
-
-\noindent Node Assignment:
-
-nodes       address            role                sell                buy
---------    ----------------   ----------------    ----------------    ----------------
-node0       localhost:10003    seller              boar                N/A
-node1       localhost:10004    none                N/A                 N/A
-node2       localhost:10001    buyer               N/A                 boar
-node3       localhost:10002    buyer               N/A                 boar
-node4       localhost:10000    buyer               N/A                 boar
----------   ----------------   ----------------    ----------------    ----------------
-
-\noindent Network Topology:
-\newline
-
-```{r echo=FALSE, dev='png', out.width="50%", fig.align='center'}
-library("DiagrammeR")
-grViz("
-      digraph test {
-        rankdir=LR;
-        overlap = false;
-        splines = true;
-        node [shape = circle];
-    
-        0 -> 1 [arrowhead = none];
-        1 -> 2 [arrowhead = none];
-        1 -> 3 [arrowhead = none];
-        1 -> 4 [arrowhead = none];
-        2 -> 3 [arrowhead = none];
-        2 -> 4 [arrowhead = none];
-        3 -> 4 [arrowhead = none];
-      }
- ")
-```
-
-# Test 6
-
-Simulate a race condition in buy() wherein a seller has stock of 1 for an item but then replies to multiple buyers.
-\newline
-
-\noindent Node Assignment:
-
-nodes       address            role                sell                buy
---------    ----------------   ----------------    ----------------    ----------------
-node0       localhost:10002    buyer               N/A                 salt
-node1       localhost:10000    buyer               N/A                 salt
-node2       localhost:10001    seller              salt                N/A
----------   ----------------   ----------------    ----------------    ----------------
-
-\noindent Network Topology:
-\newline
-
-```{r echo=FALSE, dev='png', out.width="30%", fig.align='center'}
-library("DiagrammeR")
-grViz("
-      digraph test {
-        rankdir=LR;
-        node [shape = circle];
-        2 -> 0 [arrowhead = none];
-        2 -> 1 [arrowhead = none];
-      }
- ")
-```
-
-# Test 7
-
-Test Description: Stress test for larger networks with 5 buyers and 5 sellers for each item, and 20 additional generated nodes. See `test\test7config.yml` for more details.
-
-\noindent Program Behaviors: Transactions goes smoothly between peers. No wrong items are sold or bought.
-
-# Test 8
-
-Test Description: Stress test for larger networks with random nodes, with 50 generated nodes. See `test\test8config.yml` for more details.
-\newline
-
-\noindent Program Behaviors: Network random generation is successful. Transactions goes smoothly between peers. No wrong items are sold or bought.
-
-# Test 9
-
-Test Description: Assign two nodes to have no role. Ensure that attempts are made to buy or sell. See `test\test9config.yml` for more details.
-\newline
-
-\noindent Program Behaviors: Network generation successful. No items are ever sold.
-
-# Test 10
-Test Description:  Stress test for many nodes with multiple items. 30 static nodes and 20 generated nodes For each single good there are two buyers, an unlimited seller and a seller with 10 stock. For each pair of goods there are two buyers, an unlimited seller and a seller with 10 stock. For all three goods there are three buyers and three unlimited sellers. See `test\test10config.yml` for more details.
-\newline
-
-\noindent Program Behaviors: Network random generation is successful. Transactions goes smoothly between peers. No wrong items are sold or bought.
-
-
+\noindent The first `grep` command returns 200 and second returns 100. Thus the program works as designed to handle concurrent requests.
 
 <!--
 # References

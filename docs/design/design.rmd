@@ -56,19 +56,19 @@ We used the Python Flask library to implement a web framework with REST APIs. Ea
 
 book                                                    item_number     topic               stock               price
 -----------------------------------------------------   -------------   ----------------    ----------------    ----------------
-"How to get a good grade in 677 in 20 minutes a day"    1               systems             1000                3
-"RPC for Dummies"                                       2               systems             100                 4
-"Xen and the Art of Surviving Graduate School"          3               gradschool          1000                15
-"Cooking for the Impatient Graduate Student"            4               gradschool          100                 5
+"How to get a good grade in 677 in 20 minutes a day"    1               systems             1011                3
+"RPC for Dummies"                                       2               systems             1007                4
+"Xen and the Art of Surviving Graduate School"          3               gradschool          1002                15
+"Cooking for the Impatient Graduate Student"            4               gradschool          1100                5
 -----------------------------------------------------   -------------   ----------------    ----------------    ----------------
 
 \noindent In terms of specific implementation, we followed the component structure and interfaces as given in the lab specification. Below, we describe in details each component and how each component accomplishes its intended functions, as well as additional features.
 
-- `Client`: The client connects to the frontend server and uses the functions exposed by the frontend server to perform `buy`, `search` and `lookup` requests. 
+- `Client`: The client connects to the frontend server and uses the functions exposed by the frontend server to perform `buy`, `search` and `lookup` requests.
 
-- `Frontend Server`: This server has three functions: `search(topic)`, `lookup(item_number)` and `buy(item_number)`. Each function redirects the client to the appropriate server, waits for the results and parse the the `json` request in a nicely formatted string to return to the client. 
+- `Frontend Server`: This server has three functions: `search(topic)`, `lookup(item_number)` and `buy(item_number)`. Each function redirects the client to the appropriate server, waits for the results and parse the the `json` request in a nicely formatted string to return to the client.
 
-- `Order Server`: The order server exposes the `buy(item_id)` function which is responsible for querying the catalog server for the current stock number of the desired item. If the stock number is 0, the buy request fails and returns a failure message to the client. Otherwise, the order server sends a updated `json` payload based on the queried json to update the catalog server,  which in turn decreases the stock accordingly. An example buy request and json result is as below: 
+- `Order Server`: The order server exposes the `buy(item_id)` function which is responsible for querying the catalog server for the current stock number of the desired item. If the stock number is 0, the buy request fails and returns a failure message to the client. Otherwise, the order server sends a updated `json` payload based on the queried json to update the catalog server,  which in turn decreases the stock accordingly. An example buy request and json result is as below:
 
 ```
       /buy/1
@@ -76,43 +76,43 @@ book                                                    item_number     topic   
       {
         "status": true,
         "processing_time": 0.01
-      } 
+      }
 
 ```
 
-- `Catalog Server`: The catalog server exposes two functions: `query()` and `update`, which has root URLs `/query` and `/update`. The query function allows querying by topic string and item number integers, and returns book details. The update function reads the `json` payload sent by the order server, locks the item database and catalog log, and returns a success message if the update function is performed correctly.Examples of querying and updating request are as below: 
+- `Catalog Server`: The catalog server exposes two functions: `query()` and `update`, which has root URLs `/query` and `/update`. The query function allows querying by topic string and item number integers, and returns book details. The update function reads the `json` payload sent by the order server, locks the item database and catalog log, and returns a success message if the update function is performed correctly.Examples of querying and updating request are as below:
 
 ```
       /query/1
       {
         "How to get a good grade in 677 in 20 minutes a day": {
-          "item_number": 1, 
-          "price": 3, 
-          "stock": 11, 
+          "item_number": 1,
+          "price": 3,
+          "stock": 11,
           "topic": 'systems'
         }
       }
-      
+
       /query/systems
       {
         "How to get a good grade in 677 in 20 minutes a day": {
-          "item_number": 1, 
-          "price": 3, 
-          "stock": 11, 
+          "item_number": 1,
+          "price": 3,
+          "stock": 11,
           "topic": 'systems'
         },
         "RPC for Dummies" : {
-          "item_number": 2, 
-          "price": 4, 
-          "stock": 5, 
+          "item_number": 2,
+          "price": 4,
+          "stock": 5,
           "topic": 'systems'
         }
       }
-      
+
       /update/<updated json payload>
       {"Success": True}
 ```
-\noindent Both the order and catalog server keeps logs.  The order server writes each buy request information to the order log. The catalog server writes both the initial stock of the servers and each update requests to the catalog log. 
+\noindent Both the order and catalog server keeps logs.  The order server writes each buy request information to the order log. The catalog server writes both the initial stock of the servers and each update requests to the catalog log.
 
 # Design Trade-offs
 
@@ -123,13 +123,13 @@ For the ease of implementation we hardcoded the address and port of each server 
 
 Because of time constraints, there are several features that we did not implement but would like to have included.
 
-- The current deployment system uses a bash script to `scp` the configuration files and source code to each target server. The process is rather cumbersome and the system will be cleaner and more efficient if in the future we wrapped everthing in a docker container for shipment and deployment.
+- The current deployment system uses a bash script to `scp` the configuration files and source code to each target server. The process is rather cumbersome and the system will be cleaner and more efficient if in the future we wrapped everything in a docker container for shipment and deployment.
 
 - Another possible extension would be to able to buy multiple items at the same time. This makes more intuitive sense from an online store perspective. The update function in the order server can already handle multiple item buy requests and only the frontend need to be updated to expose the function.
 
 # How to Run
 
-To run all the designed tests, navigate to the `test` folder and
+To run all the designed tests, navigate to the `tests` folder and
 
 ```{}
 # for local testing
@@ -142,7 +142,27 @@ $ bash testallremote.sh
 \noindent To terminate the process on all machines, send `ctrl+c` to the script and it will terminate all running pids of node instances on each remote machine.
 \newline
 
-\noindent If the program is run locally output logs for each node will be dumped in the working directory. If the program is run remotely, logs for each node is dumped on the machine it is running on. Each time a new tests run the old logs are cleared. `ssh` into different machines to view the output logs.
+\noindent To run the program in general, navigate to the `tests` folder, specify the desired ip address and port number in `config.yml` and run
+```{}
+# setting up the server
+$ bash run.sh
+```
+
+\noindent To run the local client to perform functions on the remote servers, run `python3 client.py`
+```{}
+# Normal client functions
+$ python3 client.py buy <item_id>
+$ python3 client.py lookup <item_id>
+$ python3 client.py search <topic>
+
+# Sequential requests
+$ python3 client.py lookup <item_id> <iterations>
+
+# Write average time to file
+$ python3 client.py lookup <item_id> <iterations> <client_id>
+```
+
+\noindent If the program is run locally output logs for each server will be dumped in the working directory. If the program is run remotely, logs for each server is dumped on the machine it is running on. `ssh` into different machines to view the output logs.
 
 <!--
 # References
