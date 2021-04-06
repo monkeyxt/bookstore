@@ -7,7 +7,7 @@ P2P bazaar for CS 677
 ## Requirements
 - Python 3
 - Flask
-- 
+
 ## How to run
 Run the `run_all.sh` script in the `tests` directory to build and deploy.
 More detailed information is available in the design documents in the `docs` directory.
