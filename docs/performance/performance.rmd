@@ -11,7 +11,7 @@ header-includes:
   -  \usepackage{hyperref}
   -  \usepackage{graphicx}
 biblio-style: apsr
-title: "CS 677 Lab 1 Performance Evaluation Report"
+title: "CS 677 Lab 2 Performance Evaluation Report"
 author:
 - name: Dan Cline, Kyle Stevens, Tian Xia
   affiliation: UMass Amherst, Amherst College
@@ -34,7 +34,7 @@ knitr::opts_chunk$set(cache=TRUE,
                       if (file.rename(x, x2)) x2 else x
                       })
 
-defOut <- knitr::knit_hooks$get("plot")  # save the default plot hook 
+defOut <- knitr::knit_hooks$get("plot")  # save the default plot hook
 knitr::knit_hooks$set(plot = function(x, options) {  # set new plot hook ...
   x <- defOut(x, options)  # first apply the default hook
   if(!is.null(options$wrapfigure)) {  # then, if option wrapfigure is given ...
@@ -50,141 +50,56 @@ library(DiagrammeR)
 ```
 
 
-# Local Machine Deployment
+# Performance of Sequential Requests
 
-In this test we deployed 6 peers on the local machine withe the following node configuration. The node configuation file can be found in `performance\per1config.yml`. The configuration can be run using `bash run.sh per1config.yml`.
+In this test, we perform 100 requests of each for all the items and topics, and measure the average latency for each combination of item/topic and requests. The test can be found in `tests/sequential`. The output can be found in `tests/output`.
 
-nodes       address            role                sell                buy
---------    ----------------   ----------------    ----------------    ----------------
-node0       localhost:10001    seller              salt (10)           N/A
-node1       localhost:10002    buyer               N/A                 salt
-node2       localhost:10004    none                N/A                 N/A
-node3       localhost:10005    buyer               N/A                 salt
-node4       localhost:10003    none                N/A                 N/A
-node5       localhost:10000    seller              salt (unlimited)    N/A
----------   ----------------   ----------------    ----------------    ----------------
+item/topic    Response Time of `buy`(s)   Response Time of `lookup`(s)    Response Time of `search`(s)
+-----------   -------------------------   ----------------------------    ----------------------------
+item1         0.035602                    0.014066                        N/A
+item2         0.036503                    0.014149                        N/A
+item3         0.035496                    0.014100                        N/A
+item4         0.034645                    0.014235                        N/A
+gradschool    N/A                         N/A                             0.014113
+systems       N/A                         N/A                             0.014110
+-----------   -------------------------   -------------------------       ----------------------------
 
-\noindent The network topology is as follows:
+\noindent From these numerical results, we can see that the response time for `buy` request is much higher than the response time for `lookup` and `search` requests. This can be attributed to the fact that `buy` requests need to go through another tier (frontend-order-catalog) compared to other requests (frontend-catalog). We also observer that the response time for `lookup` and `search` requests are surprisingly similar. This is mostly likely because these two requests both go through the same number of tiers.
 
-```{r echo=FALSE, dev='png', out.width="50%", fig.align='center'}
-library("DiagrammeR")
-grViz("
-      digraph test {
-        rankdir=LR;
-        overlap = false;
-        splines = true;
-        node [shape = circle];
-    
-        0 -> 1 [arrowhead = none];
-        0 -> 5 [arrowhead = none];
-        1 -> 2 [arrowhead = none];
-        1 -> 4 [arrowhead = none];
-        2 -> 3 [arrowhead = none];
-        2 -> 4 [arrowhead = none];
-        3 -> 4 [arrowhead = none];
-        4 -> 5 [arrowhead = none];
-    }
- ")
-```
 
-\noindent Program Behavior: the program behaves as expected. Salt is never sold after `node0` sold all of is 10 salt. Salt is sold and restocked throughout for `node5`. The two nodes with `none` roles never participate in transactions but only relays the lookup requests.
+# Performance of Per-tier Sequential Requests
 
-# Remote Machine Deployment
+The test can be found in `tests/sequential`. The output can be found in `tests/output`. We only tested the per-tier requests on item 1 and the topic systems since the results for the other items or topics should be more or less uniform. The frontend performance logs can be found on the frontend server. The client-frontend time can be found by subtracting the end-to-end run time with the frontend-catalog time or frontend-order time. The results is as below.
 
-In this test we deployed 6 peers on the local machine withe the following node configuration. The node configuration files can be found in the `performance\per1config.yml`. 
 
-nodes       address                 role                sell                buy
---------    ---------------------   ----------------    ----------------    ----------------
-node0       54.144.240.179:10001    seller              salt (10)           N/A
-node1       54.172.102.164:10002    buyer               N/A                 salt
-node2       34.202.157.206:10004    none                N/A                 N/A
-node3       54.144.240.179:10005    buyer               N/A                 salt
-node4       34.202.157.206:10003    none                N/A                 N/A
-node5       54.172.102.164:10000    seller              salt (unlimited)    N/A
----------   ---------------------   ----------------    ----------------    ----------------
+Tier                          `buy` item 1(s)           `lookup` item 1(s)      `search` topic systems (s)
+---------------------------   ---------------------     --------------------    ----------------------------
+Frontend - Order/buy          0.01029                   N/A                     N/A
+Frontend - Catalog/query      N/A                       0.00814                 0.00714
+Order    - Catalog/update     0.01715                   N/A                     N/A
+Client   - Frontend/lookup    N/A                       0.00678                 N/A
+Client   - Frontend/search    N/A                       N/A                     0.00537
+Client   - Frontend/buy       0.00611                   N/A                     N/A
+---------------------------   ---------------------     --------------------    ----------------------------
+\noindent From these numerical results, we can see that the end-to-end response time is roughly split into half per tier for both `lookup` and `search`. This makes intuitive sense because the client needs to go through two layers with similar time cost. The frontend-order seems to be the most time intensive. This is probably because it needs to both query the catalog server and update with a json payload.
 
-\noindent The network topology is as follows:
-
-```{r echo=FALSE, dev='png', out.width="50%", fig.align='center'}
-library("DiagrammeR")
-grViz("
-      digraph test {
-        rankdir=LR;
-        overlap = false;
-        splines = true;
-        node [shape = circle];
-    
-        0 -> 1 [arrowhead = none];
-        0 -> 5 [arrowhead = none];
-        1 -> 2 [arrowhead = none];
-        1 -> 4 [arrowhead = none];
-        2 -> 3 [arrowhead = none];
-        2 -> 4 [arrowhead = none];
-        3 -> 4 [arrowhead = none];
-        4 -> 5 [arrowhead = none];
-    }
- ")
-```
-
-\noindent Results for 500 invocations:
-
-nodes       address                 Remote RPC Latency (s)    Local RPC Latency (s)
---------    ---------------------   ----------------------    ---------------------
-node0       54.144.240.179:10001    0.000818                  0.000362
-node1       54.144.240.179:10002    0.000673                  0.000210
-node2       34.202.157.206:10004    0.000767                  0.000115
-node3       54.144.240.179:10005    0.000549                  0.000265
-node4       34.202.157.206:10003    0.000778                  0.000178
-node5       54.172.102.164:10000    0.000690                  0.000359
----------   ---------------------   ----------------------    ---------------------
-
-\noindent Conclusion: Local RPC Lantency is much lower than Remote RPC Latency
-
-# Performance of Client Search Requests
-
-Configuration is the same as above. We look at the lookup performance logs of the buyer nodes `node1` and its sequential respond time of 140 lookup calls. The numbers were limited because of how we structure the script to time out after a certain amount of time for all machines to run the next test.
-
-![Latency for 140 Sequential Lookup Calls](perf3.png)
-
-\noindent The minimum response time was 0.000900 seconds and the maximum response time was 0.003618 seconds. It also appears that lookup was had a higher latency in the beginning. This was probably because of the existence of a extra seller in the beginning of the network. After only one seller was left, the latency became more fixed.
 
 # Performance of Concurrent Requests
 
-In this performance evaluation we hardcode the network to have a singer seller with varying amount of buyers. The seller is on one machine and all the other buyers are on the other. The buyers are not connected to each other. A example network topology looks like the one below:
+In this test, we ran varying numbers of clients to buy the same item and measured the average end-to-end response time for 100 sequential requests for each spawned client. All test can be found in `tests/concurrent`. The output can be found in `tests/output`.
 
-```{r echo=FALSE, dev='png', out.width="50%", fig.align='center'}
-library("DiagrammeR")
-grViz("
-      digraph test {
-        overlap = false;
-        splines = true;
-        node [shape = circle];
-    
-        0 -> 1 [arrowhead = none];
-        0 -> 2 [arrowhead = none];
-        0 -> 3 [arrowhead = none];
-        0 -> 4 [arrowhead = none];
-    }
- ")
-```
+Number of Concurrent Clients    Average Response Time(s)
+----------------------------    ---------------------
+2                               0.03687
+5                               0.08694
+10                              0.15386
+20                              0.26983
+40                              0.43128
+----------------------------    ---------------------
 
-\noindent The tests can be found in `tests\test11config.yml`, `tests\test12config.yml` and `tests\test13.yml`, with 3, 4, and 5 buyers respectively. Below is the data we collected for the average response time for each buyer depending on how many buyers is connected to the seller node. All of the data are measured in seconds. In test 11, the seller node is `node3`. In test 12 the seller node is `node4` and in test 13 the seller node is `node5`.
+![Latency for 140 Sequential Buy Calls](perf1.png)
 
-
-nodes               3 buyers                4 buyers                  5 buyers
------------------   ---------------------   ----------------------    ---------------------
-node0               0.000399                0.00210                   0.00263
-node1               0.000411                0.00211                   0.00233
-node2               0.000353                0.00210                   0.00275
-node3               0.000174                0.00209                   0.00219
-node4                                       0.000791                  0.00255
-node5                                                                 0.000843
-average of buyers   0.000387                0.00210                   0.00249
------------------   ---------------------   ----------------------    ---------------------
-
-![Latency for Buyer Lookup Latency for Each Test](perf4.png)
-
-\noindent From these numerical results, we can say that the response time increases when the seller receives increasing amount of concurrent requests from buyers. The seller response time also increased significantly as well. We would like to have tested more complex network topologies but we ran out of time. 
+\noindent From the graph, we can say that the response time increases when the seller receives increasing amount of concurrent requests from buyers.
 
 <!--
 # References
