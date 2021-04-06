@@ -29,7 +29,7 @@ def search(topic):
         "topic": topic
     }
     search_start = time.perf_counter_ns()
-    books = requests.post(CATALOG_IP + '/query/', json=topic_query).json()
+    books = requests.post("http://" + CATALOG_IP + '/query/', json=topic_query).json()
     search_elapsed = time.perf_counter_ns() - search_start
     perf_logger.info(f"search time: {search_elapsed}")
 
@@ -52,7 +52,7 @@ def lookup(item_number):
         "item_number": item_number
     }
     lookup_start = time.perf_counter_ns()
-    books = requests.post(CATALOG_IP + '/query/', json=item_query).json()
+    books = requests.post("http://" + CATALOG_IP + '/query/', json=item_query).json()
     lookup_elapsed = time.perf_counter_ns() - lookup_start
     perf_logger.info(f"lookup time: {lookup_elapsed}")
 
@@ -73,7 +73,7 @@ def lookup(item_number):
 def buy(item_number):
     logging.info(f"Attempting to buy item: {item_number}")
     frontend_buy_start = time.perf_counter_ns()
-    response = requests.post(ORDER_IP + '/buy/' + item_number).json()
+    response = requests.post("http://" + ORDER_IP + '/buy/' + item_number).json()
     frontend_buy_elapsed = time.perf_counter_ns() - frontend_buy_start
     perf_logger.info(f"frontend buy time: {frontend_buy_elapsed}")
     order_elapsed = response["elapsed_time"]

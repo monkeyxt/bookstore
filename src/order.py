@@ -32,7 +32,7 @@ def buy(item_number=None, topic=None):
     #     }
 
     # first get the number that exist - note:
-    num_items_response = requests.post(CATALOG_IP + '/query/', json=item_query).json()
+    num_items_response = requests.post("http://" + CATALOG_IP + '/query/', json=item_query).json()
 
     buy_elapsed = time.perf_counter_ns() - buystart
     if len(num_items_response.keys()) == 0:
@@ -58,7 +58,7 @@ def buy(item_number=None, topic=None):
         }
     update_payload[book]["stock"] -= 1
 
-    response = requests.post(CATALOG_IP + '/update/', json=update_payload).json()
+    response = requests.post("http://" + CATALOG_IP + '/update/', json=update_payload).json()
 
     buy_elapsed = time.perf_counter_ns() - buystart
 
