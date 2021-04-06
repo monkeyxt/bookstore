@@ -6,6 +6,8 @@ frontendpid=0
 
 cd ../../src/
 
+echo "This test needs to be run with local ip !!!"
+
 echo "Starting the order server..."
 python3 order.py & orderpid=$!
 
