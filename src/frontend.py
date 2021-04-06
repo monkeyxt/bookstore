@@ -15,6 +15,11 @@ FRONTEND_IP = config['frontend']
 ORDER_IP = config['order']
 CATALOG_IP = config['catalog']
 
+perf_logger = logging.getLogger("perf")
+perf_logger.setLevel(logging.DEBUG)
+perf_file_handler = logging.FileHandler('frontendperf.log')
+perf_file_handler.setLevel(logging.DEBUG)
+perf_logger.addHandler(perf_file_handler)
 
 # Search for the requested topic
 @app.route("/search/<topic>")
@@ -26,6 +31,7 @@ def search(topic):
     search_start = time.perf_counter_ns()
     books = requests.post(CATALOG_IP + '/query/', json=topic_query).json()
     search_elapsed = time.perf_counter_ns() - search_start
+    perf_logger.info(f"search time: {search_elapsed}")
 
     # Parse the json of the search result
     search_result = []
@@ -48,6 +54,7 @@ def lookup(item_number):
     lookup_start = time.perf_counter_ns()
     books = requests.post(CATALOG_IP + '/query/', json=item_query).json()
     lookup_elapsed = time.perf_counter_ns() - lookup_start
+    perf_logger.info(f"lookup time: {lookup_elapsed}")
 
     # Parse the lookup result
     lookup_result = []
@@ -68,6 +75,9 @@ def buy(item_number):
     frontend_buy_start = time.perf_counter_ns()
     response = requests.post(ORDER_IP + '/buy/' + item_number).json()
     frontend_buy_elapsed = time.perf_counter_ns() - frontend_buy_start
+    perf_logger.info(f"frontend buy time: {frontend_buy_elapsed}")
+    order_elapsed = response["elapsed_time"]
+    perf_logger.info(f"order buy time: {order_elapsed}")
 
     # Use the 'status' boolean in json to check if the purchase was successful
     if response["status"]:
