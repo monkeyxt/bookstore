@@ -23,7 +23,9 @@ def search(topic):
     topic_query = {
         "topic": topic
     }
+    search_start = time.perf_counter_ns()
     books = requests.post(CATALOG_IP + '/query/', json=topic_query).json()
+    search_elapsed = time.perf_counter_ns() - search_start
 
     # Parse the json of the search result
     search_result = []
@@ -32,7 +34,8 @@ def search(topic):
         search_result.extend(["ID: ", str(books[book]['item_number']), "\n"])
 
     # Return the search result in a string
-    return "".join(search_result)
+    return "".join(search_result) + "\n" + \
+        "Elapsed time (search): " + str(search_elapsed)
 
 
 # Lookup the requested item number
@@ -42,7 +45,9 @@ def lookup(item_number):
     item_query = {
         "item_number": item_number
     }
+    lookup_start = time.perf_counter_ns()
     books = requests.post(CATALOG_IP + '/query/', json=item_query).json()
+    lookup_elapsed = time.perf_counter_ns() - lookup_start
 
     # Parse the lookup result
     lookup_result = []
@@ -52,7 +57,8 @@ def lookup(item_number):
         lookup_result.extend(["Stock: ", str(books[book]["stock"]), "\n"])
 
     # Return the lookup result in a string
-    return "".join(lookup_result)
+    return "".join(lookup_result) + "\n" + \
+        "Elapsed time (lookup): " + str(lookup_elapsed)
 
 
 # Buy the requested item number
@@ -67,13 +73,13 @@ def buy(item_number):
     if response["status"]:
         logging.info("Success")
         return "Successfully purchased: " + str(item_number) + "\n" + \
-            "Elapsed time (order server): " + str(response["elapsed_time"]) + \
-            "\n" + "Elapsed time (frontend server): " + str(frontend_buy_elapsed)
+            "Elapsed time (buy, order server): " + str(response["elapsed_time"]) + \
+            "\n" + "Elapsed time (buy, frontend server): " + str(frontend_buy_elapsed)
     else:
         logging.error("Purchase Failed")
         return "Failed to purchase: " + str(item_number) + "\n" + \
-            "Elapsed time (order server): " + str(response["elapsed_time"]) + \
-            "\n" + "Elapsed time (frontend server): " + str(frontend_buy_elapsed)
+            "Elapsed time (buy, order server): " + str(response["elapsed_time"]) + \
+            "\n" + "Elapsed time (buy, frontend server): " + str(frontend_buy_elapsed)
 
 if __name__ == "__main__":
     log_path = "logs/frontend.txt"
