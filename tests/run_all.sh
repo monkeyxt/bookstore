@@ -1,3 +1,5 @@
+run_pid=0
+
 c_tests=`ls concurrent`
 for test in $c_tests
 do
