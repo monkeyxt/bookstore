@@ -1,2 +1,10 @@
-2021-04-05 22:14:52,301 Catalog server started
-2021-04-05 22:14:52,301  * Running on http://0.0.0.0:5003/ (Press CTRL+C to quit)
+2021-04-06 00:48:16,940 Catalog server starting on port 9003
+2021-04-06 00:48:16,941  * Running on http://0.0.0.0:9003/ (Press CTRL+C to quit)
+2021-04-06 00:48:17,370 Querying for item number: 1
+2021-04-06 00:48:17,370 127.0.0.1 - - [06/Apr/2021 00:48:17] "[37mPOST /query/ HTTP/1.1[0m" 200 -
+2021-04-06 00:48:17,490 Querying for topic: systems
+2021-04-06 00:48:17,491 127.0.0.1 - - [06/Apr/2021 00:48:17] "[37mPOST /query/ HTTP/1.1[0m" 200 -
+2021-04-06 00:48:17,613 Querying for item number: 1
+2021-04-06 00:48:17,613 127.0.0.1 - - [06/Apr/2021 00:48:17] "[37mPOST /query/ HTTP/1.1[0m" 200 -
+2021-04-06 00:48:17,615 Updating items: ['How to get a good grade in 677 in 20 minutes a day']
+2021-04-06 00:48:17,615 127.0.0.1 - - [06/Apr/2021 00:48:17] "[37mPOST /update/ HTTP/1.1[0m" 200 -
