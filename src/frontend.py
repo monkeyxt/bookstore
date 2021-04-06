@@ -1,4 +1,5 @@
 from flask import Flask
+import time
 import requests
 import yaml
 import logging
@@ -58,17 +59,21 @@ def lookup(item_number):
 @app.route("/buy/<item_number>")
 def buy(item_number):
     logging.info(f"Attempting to buy item: {item_number}")
+    frontend_buy_start = time.process_time()
     response = requests.post(ORDER_IP + '/buy/' + item_number).json()
+    frontend_buy_elapsed = time.process_time() - frontend_buy_start
 
     # Use the 'status' boolean in json to check if the purchase was successful
     if response["status"]:
         logging.info("Success")
         return "Successfully purchased: " + str(item_number) + "\n" + \
-            "Elapsed time: " + str(response["elapsed_time"])
+            "Elapsed time (order server): " + str(response["elapsed_time"]) + \
+            "\n" + "Elapsed time (frontend server): " + str(frontend_buy_elapsed)
     else:
         logging.error("Purchase Failed")
         return "Failed to purchase: " + str(item_number) + "\n" + \
-            "Elapsed time: " + str(response["elapsed_time"])
+            "Elapsed time (order server): " + str(response["elapsed_time"]) + \
+            "\n" + "Elapsed time (frontend server): " + str(frontend_buy_elapsed)
 
 if __name__ == "__main__":
     log_path = "../logs/frontend.txt"
