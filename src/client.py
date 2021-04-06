@@ -14,7 +14,7 @@ FRONTEND_IP = config['frontend']
 # Search the requested topic
 def search(topic):
     print(topic)
-    search_output = requests.get(FRONTEND_IP + '/search/' + topic).text
+    search_output = requests.get("http://" + FRONTEND_IP + '/search/' + topic).text
     print(search_output)
     return search_output
 
@@ -22,7 +22,7 @@ def search(topic):
 # Lookup the requested book item
 def lookup(item_number):
     item_number_str = str(item_number)
-    lookup_output = requests.get(FRONTEND_IP + '/lookup/' + item_number_str).text
+    lookup_output = requests.get("http://" + FRONTEND_IP + '/lookup/' + item_number_str).text
     print(lookup_output)
     return lookup_output
 
@@ -30,7 +30,7 @@ def lookup(item_number):
 # Buy the requested book item
 def buy(item_number):
     item_number_str = str(item_number)
-    buy_output = requests.get(FRONTEND_IP + '/buy/' + item_number_str).text
+    buy_output = requests.get("http://" + FRONTEND_IP + '/buy/' + item_number_str).text
     print(buy_output)
     return buy_output
 
