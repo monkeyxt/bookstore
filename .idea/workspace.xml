@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e784d7a4-c279-45ab-8b2d-2352439a48f0" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/docs/performance/performance.pdf" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/performance/performance.rmd" beforeDir="false" afterPath="$PROJECT_DIR$/docs/performance/performance.rmd" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -41,7 +40,7 @@
       <option name="presentableId" value="Default" />
       <updated>1617652916580</updated>
       <workItem from="1617652918157" duration="64000" />
-      <workItem from="1617655713972" duration="21878000" />
+      <workItem from="1617655713972" duration="22546000" />
     </task>
     <servers />
   </component>

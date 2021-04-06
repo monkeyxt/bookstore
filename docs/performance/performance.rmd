@@ -90,14 +90,14 @@ In this test, we ran varying numbers of clients to buy the same item and measure
 
 Number of Concurrent Clients    Average Response Time(s)
 ----------------------------    ---------------------
-2                               0.03687
-5                               0.08694
-10                              0.15386
-20                              0.26983
-40                              0.43128
+2                               0.01657
+5                               0.04654
+10                              0.10350
+20                              0.13829
+40                              0.23409
 ----------------------------    ---------------------
 
-![Latency for 140 Sequential Buy Calls](perf1.png)
+![Latency for 100 Sequential Lookup Calls](perf1.png)
 
 \noindent From the graph, we can say that the response time increases when the seller receives increasing amount of concurrent requests from buyers.
 
