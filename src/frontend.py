@@ -54,7 +54,7 @@ def search(topic):
 # Lookup the requested item number
 @app.route("/lookup/<int:item_number>")
 def lookup(item_number):
-    title = book_titles[item_number]
+    title = book_titles[int(item_number)]
     logging.info(f"Looking up item: {title}")
     item_query = {
         "item_number": item_number
@@ -79,7 +79,7 @@ def lookup(item_number):
 # Buy the requested item number
 @app.route("/buy/<item_number>")
 def buy(item_number):
-    title = book_titles[item_number]
+    title = book_titles[int(item_number)]
     logging.info(f"Attempting to buy item: {title}")
     frontend_buy_start = time.perf_counter_ns()
     response = requests.post("http://" + ORDER_IP + '/buy/' + item_number).json()
