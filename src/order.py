@@ -50,7 +50,7 @@ def hold_election():
     return
 
 
-# Notify other nodes who is now the primary replica for order servers
+# Notify other order nodes who is now the primary replica for order servers
 def broadcast_coordinator():
     order_replica_list = app.config.get("order_replica_list")
     local_order_server = app.config.get("local_ip")
@@ -70,23 +70,23 @@ def notify(primary):
 
 
 # Forwarding the query to the primary order replica
-def forward_query(item_number, primary_ip):
+def forward_query(item_number, primary):
     try:
-        response = requests.post("http://" + primary_ip + '/buy/' + item_number).json()
+        response = requests.post("http://" + primary + '/buy/' + item_number).json()
         return response
     except requests.exceptions.ConnectionError:
         # Primary order server is down, make self primary and try again
-        app.config["primary_order"] = app.config["local_ip"]
-        return forward_query(item_number, app.config["primary_order"])
+        app.config["primary_order"] = app.config.get("local_ip")
+        return forward_query(item_number, app.config.get("primary_order"))
 
 
 # Sync an order to another other replica
 def sync_order(order):
-    order_id = order["order_id"]
-    processing_time = order["processing_time"]
-    item_number = order["item_number"]
-    title = order["title"]
-    status = order["status"]
+    order_id = str(order["order_id"])
+    processing_time = str(order["processing_time"])
+    item_number = str(order["item_number"])
+    title = str(order["title"])
+    status = str(order["status"])
 
     order_replica_list = app.config.get("order_replica_list")
     local_order_server = app.config.get("local_ip")
@@ -97,11 +97,12 @@ def sync_order(order):
                     "http://" + order_replica + '/replicate/' + order_id + '/' + processing_time + '/' + item_number
                     + '/' + title + '/' + status).json()
             except requests.exceptions.ConnectionError:
-                print("The other replica is down")
+                print("The other replica is down. Failed to sync order")
+                return
     return
 
 
-# Replicate the order from another server
+# Replicate the order from another server and store in local log to be consistent
 @app.route("/replicate/<order_id>/<processing_time>/<item_number>/<title>/<status>")
 def replicate(order_id, processing_time, item_number, title, status):
     order_id = int(order_id)
@@ -128,6 +129,7 @@ def sync_entire():
                     return
             except requests.exceptions.ConnectionError:
                 print(order_replica + " is down")
+                return
 
     # TODO: case where the current replica is the only one up
     return
@@ -176,7 +178,7 @@ def create_order(order_id, processing_time, item_number, title, status):
 
 # Write an order into the CSV txt order database
 def log_order(order):
-    with open(app.config["order_db"], mode='a') as order_log:
+    with open(app.config.get("local_db"), mode='a') as order_log:
         fieldnames = ['order_id', 'processing_time', 'item_number', 'title', 'status']
         writer = csv.DictWriter(order_log, fieldnames=fieldnames)
         writer.writerow(order)
