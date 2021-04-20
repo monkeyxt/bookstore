@@ -1,20 +1,24 @@
 from flask import Flask, request
-import requests
 import yaml
 import json
 import threading
 import logging
 
-## Define Flask frontend
+# Define Flask frontend
 app = Flask("catalog")
 
-## Load Server configs from yaml
+# Load Server configs from yaml
 with open('config.yml', 'r') as file:
     config = yaml.load(file, Loader=yaml.FullLoader)
 
+# Server addresses and list of replica addresses
 FRONTEND_IP = config['frontend']
-ORDER_IP = config['order']
-CATALOG_IP = config['catalog']
+ORDER_IP1 = config['order1']
+ORDER_IP2 = config['order2']
+CATALOG_IP1 = config['catalog1']
+CATALOG_IP2 = config['catalog2']
+order_replica_list = [ORDER_IP1, ORDER_IP2]
+catalog_replica_list = [CATALOG_IP1, CATALOG_IP2]
 
 # Initial setting for the books catalog
 books = {
@@ -46,7 +50,7 @@ books = {
 
 books_lock = threading.Lock()
 
-## Query endpoint
+# Query endpoint
 # Include a data payload with the request (ex: {"item_number": 100})
 @app.route("/query/", methods = ["POST"])
 def query():
