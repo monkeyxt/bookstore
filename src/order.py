@@ -151,7 +151,7 @@ def download(filename):
 
 # Initialize the order database as a CSV txt file
 def initialize_orders():
-    with open(app.config["order_db"], mode='w') as order_log:
+    with open(app.config["local_db"], mode='w') as order_log:
         fieldnames = ['order_id', 'processing_time', 'item_number', 'title', 'status']
         writer = csv.DictWriter(order_log, fieldnames=fieldnames)
         writer.writeheader()
@@ -159,7 +159,7 @@ def initialize_orders():
 
 # Get the list of orders as a dictionary
 def get_order_list():
-    with open(app.config["order_db"], mode='r') as order_log:
+    with open(app.config["local_db"], mode='r') as order_log:
         csv_reader = csv.DictReader(order_log)
         return [row for row in csv_reader]
 
@@ -188,6 +188,7 @@ def log_order(order):
 # Functions for updating the catalog server
 ################################################################################
 
+
 # Query the catalog server
 def query_catalog_server(item_number):
     primary = app.config.get("primary_catalog")
@@ -215,16 +216,15 @@ def query_catalog_server(item_number):
 def decrement_catalog_server(item_number):
     response = requests.post(
         "http://" + app.config.get("primary_catalog") + '/update/' + item_number + '/amount/decrease/1').json()
-    amount = list(response.values())[0]["stock"]
     status = list(response.values())[0]["status"]
-    return amount, status
+    return status
 
 
 @app.route("/buy/<int:item_number>", methods=["POST"])
 def buy(item_number):
     # The current server is not the primary replica, forward to the primary
     if app.config.get("primary_order") != app.config.get("local_ip"):
-        response = forward_query(item_number, app.config.get("local_ip"))
+        response = forward_query(item_number, app.config.get("primary_order"))
         return response
     # Else the current server is the primary replica, execute locally
     else:
@@ -240,7 +240,7 @@ def buy(item_number):
                 # Item not in stock, buy failed
                 status = False
             else:
-                new_amount, status = decrement_catalog_server(item_number)
+                status = decrement_catalog_server(item_number)
 
             order = create_order(order_id, elapsed_time, item_number, book_titles[int(item_number)], status)
 
