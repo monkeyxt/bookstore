@@ -258,6 +258,7 @@ def update():
     else:
         with books_lock:
             if operation == "increase":
+                order_id = get_order_num() + 1
                 for key, value in books.items():
                     if value["item_number"] == item_number:
                         value[attribute] += number
