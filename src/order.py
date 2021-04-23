@@ -224,7 +224,7 @@ def query_catalog_server(item_number):
 # Decrease the catalog server and return the new quantity
 def decrement_catalog_server(item_number):
     response = requests.post(
-        "http://" + app.config.get("assigned_catalog") + '/update/' + item_number + '/amount/decrease/1').json()
+        "http://" + app.config.get("assigned_catalog") + '/update/' + str(item_number) + '/stock/decrease/1').json()
     status = list(response.values())[0]["status"]
     return status
 
@@ -282,7 +282,10 @@ def load_config():
     app.config["name"] = sys.argv[1]
     app.config["local_ip"] = config[sys.argv[1]]
     app.config["local_port"] = app.config["local_ip"].split(":")[-1]
-    app.config["local_db"] = app.config["name"] + "_db.txt"
+    app.config["local_db"] = "databases/" + app.config["name"] + "_db.txt"
+
+    # Create database file
+    open(app.config.get("local_db"), "w").close()
 
     # List of other replicas
     order_replica_list = [ORDER_IP1, ORDER_IP2]

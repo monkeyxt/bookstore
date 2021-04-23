@@ -1,9 +1,10 @@
-from flask import Flask, request
+import codecs
+import csv
+from flask import Flask, request, make_response, abort
 import requests
 import yaml
 import json
 import threading
-import logging
 import sys
 import time
 
@@ -129,7 +130,7 @@ def sync_order(order):
         if catalog_replica != local_catalog_server:
             try:
                 requests.post(
-                    "http://" + primary + '/update/' + item_number + '/' + attribute + '/' + operation
+                    "http://" + catalog_replica + '/update/' + item_number + '/' + attribute + '/' + operation
                     + '/' + number).json()
             except requests.exceptions.ConnectionError:
                 print("The other replica is down. Failed to sync order")
@@ -247,9 +248,9 @@ def query():
 
 
 # Updating an endpoint/Replicating an order
-@app.route("/update/<item_number>/<attribute>/<operation>/<int:number>", methods=["PUT"])
+@app.route("/update/<item_number>/<attribute>/<operation>/<int:number>", methods=["POST"])
 @app.route("/replicate/<item_number>/<attribute>/<operation>/<int:number>", methods=["PUT"])
-def update():
+def update(item_number, attribute, operation, number):
 
     # Check to make sure that the operation is valid
     valid_attribute = ["stock", "price"]
@@ -268,8 +269,9 @@ def update():
     # Else the current server is the primary replica, execute locally
     else:
         with books_lock:
+            status = False
+            order_id = get_order_num() + 1
             if operation == "increase":
-                order_id = get_order_num() + 1
                 for key, value in books.items():
                     if value["item_number"] == item_number:
                         value[attribute] += number
@@ -280,9 +282,9 @@ def update():
                     if value["item_number"] == item_number:
                         if value[attribute] > 0:
                             value[attribute] -= number
-                            status = true
+                            status = True
                         else:
-                            status = false
+                            status = False
 
         order = create_order(order_id, item_number, attribute, operation, number, status)
 
@@ -293,7 +295,7 @@ def update():
         sync_order(order)
 
         #  Invalidate the frontend cache
-        response = request.put("http://" + FRONTEND_IP + "/invalidate/" + str(item_number))
+        response = requests.put("http://" + FRONTEND_IP + "/invalidate/" + str(item_number))
 
         if status:
             return {
@@ -315,7 +317,10 @@ def load_config():
     app.config["name"] = sys.argv[1]
     app.config["local_ip"] = config[sys.argv[1]]
     app.config["local_port"] = app.config["local_ip"].split(":")[-1]
-    app.config["local_db"] = app.config["name"] + "_db.txt"
+    app.config["local_db"] = "databases/" + app.config["name"] + "_db.txt"
+
+    # Create database file
+    open(app.config.get("local_db"), "w").close()
 
     # List of other replicas
     order_replica_list = [ORDER_IP1, ORDER_IP2]
@@ -332,7 +337,7 @@ def load_config():
 if __name__ == "__main__":
     load_config()
 
-    time.sleep(5)
+    #time.sleep(5)
     broadcast_coordinator()
     sync_entire()
 
