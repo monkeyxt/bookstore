@@ -122,7 +122,7 @@ def sync_entire():
         if order_replica != local_order_server:
             try:
                 response = requests.get("http://" + order_replica + "/download/"
-                                        + "order" + str(order_replica_list.index(order_replica)) + "_db.txt")
+                                        + "order" + str(order_replica_list.index(order_replica)+1) + "_db.txt")
                 local_db = app.config.get("name") + "_db.txt"
                 with open(local_db, "wb") as db:
                     db.write(response.content)

@@ -3,6 +3,9 @@ import yaml
 import json
 import threading
 import logging
+import sys
+import time
+import requests
 
 # Define Flask frontend
 app = Flask("catalog")
@@ -142,7 +145,7 @@ def sync_entire():
         if catalog_replica != local_catalog_server:
             try:
                 response = requests.get("http://" + catalog_replica + "/download/"
-                                        + "catalog" + catalog_replica_list.index(catalog_replica) + "_db.txt")
+                                        + "catalog" + str(catalog_replica_list.index(catalog_replica)+1) + "_db.txt")
                 local_db = app.config.get("name") + "_db.txt"
                 with open(local_db, "wb") as db:
                     db.write(response.content)
