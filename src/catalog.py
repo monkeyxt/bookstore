@@ -165,6 +165,14 @@ def download(filename):
     return response
 
 
+# Respond to ping messages
+@app.route("/ping/", methods=["POST"])
+def ping():
+    return {
+        "status": True,
+    }
+
+
 ################################################################################
 # Helper functions for dealing with local database
 ################################################################################

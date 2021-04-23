@@ -145,6 +145,14 @@ def download(filename):
     return response
 
 
+# Respond to ping messages
+@app.route("/ping/", methods=["POST"])
+def ping():
+    return {
+        "status": True,
+    }
+
+
 ################################################################################
 # Helper functions for dealing with local database
 ################################################################################
@@ -294,8 +302,8 @@ if __name__ == "__main__":
     load_config()
 
     # Wait until the other replicas boot up. Then broadcast the primary and sync databases.
-    time.sleep(5)
-    broadcast_coordinator()
-    sync_entire()
+    #time.sleep(5)
+    #broadcast_coordinator()
+    #sync_entire()
 
     app.run(host='0.0.0.0', port=app.config["local_port"])

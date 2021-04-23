@@ -62,7 +62,7 @@ def check_heartbeat():
     # Check heartbeat for order replicas
     for order_replica in order_replica_list:
         try:
-            response = requests.post("http://" + order_replica + "/ping")
+            response = requests.post("http://" + order_replica + "/ping/").json()
             if (response["status"]) and (order_replica not in available_order_list):
                 available_order_list.append(order_replica)
                 print("Added " + order_replica + " to the list of available order replicas.")
@@ -74,7 +74,7 @@ def check_heartbeat():
     # Check heartbeat for catalog replicas
     for catalog_replica in catalog_replica_list:
         try:
-            response = requests.post("http://" + catalog_replica + "/ping")
+            response = requests.post("http://" + catalog_replica + "/ping").json()
             if (response["status"]) and (catalog_replica not in available_catalog_list):
                 available_catalog_list.append(catalog_replica)
                 print("Added " + catalog_replica + " to the list of available catalog replicas.")
@@ -224,7 +224,7 @@ if __name__ == "__main__":
 
     # Background scheduler that checks for heartbeat every 10 seconds
     scheduler = BackgroundScheduler()
-    job = scheduler.add_job(check_heartbeat, 'interval', seconds=10)
+    job = scheduler.add_job(check_heartbeat, 'interval', seconds=2)
     scheduler.start()
 
     app.run(host='0.0.0.0', port=FRONTEND_PORT)
