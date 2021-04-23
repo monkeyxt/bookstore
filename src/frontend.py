@@ -4,6 +4,7 @@ import requests
 import yaml
 import random
 import logging
+from apscheduler.schedulers.background import BackgroundScheduler
 
 # Define Flask frontend
 app = Flask("frontend")
@@ -18,8 +19,14 @@ ORDER_IP1 = config['order1']
 ORDER_IP2 = config['order2']
 CATALOG_IP1 = config['catalog1']
 CATALOG_IP2 = config['catalog2']
+
+# List of possible replica servers
 order_replica_list = [ORDER_IP1, ORDER_IP2]
 catalog_replica_list = [CATALOG_IP1, CATALOG_IP2]
+
+# List of available servers
+available_order_list = []
+available_catalog_list = []
 
 # Local dictionary of book titles
 book_titles = {
@@ -50,6 +57,34 @@ def get_server_location(replica):
     return server_location
 
 
+# Heartbeat check for both the catalog and order replica
+def check_heartbeat():
+    # Check heartbeat for order replicas
+    for order_replica in order_replica_list:
+        try:
+            response = requests.post("http://" + order_replica + "/ping")
+            if (response["status"]) and (order_replica not in available_order_list):
+                available_order_list.append(order_replica)
+                print("Added " + order_replica + " to the list of available order replicas.")
+        except requests.exceptions.ConnectionError:
+            if order_replica in available_order_list:
+                available_order_list.remove(order_replica)
+                print("Removed " + order_replica + " from the list of available order replicas.")
+
+    # Check heartbeat for catalog replicas
+    for catalog_replica in catalog_replica_list:
+        try:
+            response = requests.post("http://" + catalog_replica + "/ping")
+            if (response["status"]) and (catalog_replica not in available_catalog_list):
+                available_catalog_list.append(catalog_replica)
+                print("Added " + catalog_replica + " to the list of available catalog replicas.")
+        except requests.exceptions.ConnectionError:
+            if catalog_replica in available_catalog_list:
+                available_catalog_list.remove(catalog_replica)
+                print("Removed " + catalog_replica + " from the list of available catalog replicas.")
+    return
+
+
 # Invalidate a frontend cache. The parameters could be a topic or an item number.
 @app.route("/invalidate/<key>", methods=["PUT"])
 def invalidate(key):
@@ -67,7 +102,7 @@ def search(topic: str) -> str:
         return cache[topic]
 
     logging.info(f"Searching for topic: {topic}")
-    server_location = get_server_location(catalog_replica_list)
+    server_location = get_server_location(available_catalog_list)
     topic_query = {
         "topic": topic
     }
@@ -94,6 +129,7 @@ def search(topic: str) -> str:
 
     except requests.exceptions.ConnectionError:
         # The chosen replica did not respond. Randomly pick another one to try again
+        available_catalog_list.remove(server_location)
         print("Chosen catalog replica failed to respond. Trying another replica")
         return search(topic)
 
@@ -101,14 +137,13 @@ def search(topic: str) -> str:
 # Lookup the requested item number
 @app.route("/lookup/<int:item_number>")
 def lookup(item_number):
-
     # Check cache to see if item_number is in cache
     if item_number in cache:
         return cache[item_number]
 
     title = book_titles[int(item_number)]
     logging.info(f"Looking up item: {title}")
-    server_location = get_server_location(catalog_replica_list)
+    server_location = get_server_location(available_catalog_list)
     item_query = {
         "item_number": item_number
     }
@@ -134,6 +169,7 @@ def lookup(item_number):
 
     except requests.exceptions.ConnectionError:
         # The chosen replica did not respond. Randomly pick another one to try again
+        available_catalog_list.remove(server_location)
         print("Chosen catalog replica failed to respond. Trying another replica")
         return lookup(item_number)
 
@@ -142,7 +178,7 @@ def lookup(item_number):
 @app.route("/buy/<item_number>")
 def buy(item_number):
     title = book_titles[int(item_number)]
-    server_location = get_server_location(order_replica_list)
+    server_location = get_server_location(available_order_list)
 
     logging.info(f"Attempting to buy item: {title}")
     frontend_buy_start = time.perf_counter_ns()
@@ -168,8 +204,10 @@ def buy(item_number):
                    "\n" + "Elapsed time (buy, frontend server): " + str(frontend_buy_elapsed)
 
     except requests.exceptions.ConnectionError:
-        # The chosen replica did not respond. Randomly pick another one to try again
-        print("Chosen order replica failed to respond. Trying another replica")
+        # The chosen replica did not respond. Remove replica from the available order replica list Randomly pick
+        # another one to try again
+        available_order_list.remove(server_location)
+        print("Chosen order replica failed to respond. Trying another replica.")
         return buy(item_number)
 
 
@@ -179,4 +217,14 @@ if __name__ == "__main__":
     logging.basicConfig(filename=log_path, level=logging.DEBUG, format="%(asctime)s %(message)s")
     FRONTEND_PORT = config['frontend'].split(":")[-1]
     logging.info(f"Frontend server starting on port {FRONTEND_PORT}")
+
+    # Initially all servers are assumed to be up
+    available_order_list = order_replica_list
+    available_catalog_list = catalog_replica_list
+
+    # Background scheduler that checks for heartbeat every 10 seconds
+    scheduler = BackgroundScheduler()
+    job = scheduler.add_job(check_heartbeat, 'interval', seconds=10)
+    scheduler.start()
+
     app.run(host='0.0.0.0', port=FRONTEND_PORT)
