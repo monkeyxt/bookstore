@@ -320,6 +320,8 @@ def load_config():
 
 if __name__ == "__main__":
     load_config()
+
+    time.sleep(5)
     broadcast_coordinator()
 
     # TODO: some kind of download mechanism here to sync with other database on crash

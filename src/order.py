@@ -122,13 +122,14 @@ def sync_entire():
         if order_replica != local_order_server:
             try:
                 response = requests.get("http://" + order_replica + "/download/"
-                                        + "order" + order_replica_list.index(order_replica) + "_db.txt")
+                                        + "order" + str(order_replica_list.index(order_replica)) + "_db.txt")
                 local_db = app.config.get("name") + "_db.txt"
                 with open(local_db, "wb") as db:
                     db.write(response.content)
+                    print(local_order_server + " successfully synced with primary replica.")
                     return
             except requests.exceptions.ConnectionError:
-                print(order_replica + " is down")
+                print(order_replica + " is either down or the database has not been created.")
                 return
 
     # TODO: case where the current replica is the only one up
@@ -191,7 +192,7 @@ def log_order(order):
 
 # Query the catalog server
 def query_catalog_server(item_number):
-    primary = app.config.get("primary_catalog")
+    primary = app.config.get("assigned_catalog")
     item_query = {
         "item_number": item_number
     }
@@ -206,16 +207,16 @@ def query_catalog_server(item_number):
         # primary catalog server must be down try another server
         print("Catalog server replica " + primary + " down")
         if primary == CATALOG_IP1:
-            app.config["primary_catalog"] = CATALOG_IP2
+            app.config["assigned_catalog"] = CATALOG_IP2
         else:
-            app.config["primary_catalog"] = CATALOG_IP1
+            app.config["assigned_catalog"] = CATALOG_IP1
         return query_catalog_server(item_number)
 
 
 # Decrease the catalog server and return the new quantity
 def decrement_catalog_server(item_number):
     response = requests.post(
-        "http://" + app.config.get("primary_catalog") + '/update/' + item_number + '/amount/decrease/1').json()
+        "http://" + app.config.get("assigned_catalog") + '/update/' + item_number + '/amount/decrease/1').json()
     status = list(response.values())[0]["status"]
     return status
 
@@ -284,12 +285,17 @@ def load_config():
     # Set the default primary order server to the first IP in the list. Also set the catalog server so that order1
     # talks to catalog1 and order2 talks to catalog2
     app.config["primary_order"] = ORDER_IP1
-    app.config["primary_catalog"] = catalog_replica_list[order_replica_list.index(config[sys.argv[1]])]
+    app.config["assigned_catalog"] = catalog_replica_list[order_replica_list.index(config[sys.argv[1]])]
 
 
 if __name__ == "__main__":
-    load_config()
-    broadcast_coordinator()
 
-    # TODO: some kind of download mechanism here to sync with other database on crash
+    # Load config for the catalog server
+    load_config()
+
+    # Wait until the other replicas boot up. Then broadcast the primary and sync databases.
+    time.sleep(5)
+    broadcast_coordinator()
+    sync_entire()
+
     app.run(host='0.0.0.0', port=app.config["local_port"])
