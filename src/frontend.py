@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 import time
 import requests
 import yaml
@@ -74,7 +74,7 @@ def check_heartbeat():
     # Check heartbeat for catalog replicas
     for catalog_replica in catalog_replica_list:
         try:
-            response = requests.post("http://" + catalog_replica + "/ping").json()
+            response = requests.post("http://" + catalog_replica + "/ping/").json()
             if (response["status"]) and (catalog_replica not in available_catalog_list):
                 available_catalog_list.append(catalog_replica)
                 print("Added " + catalog_replica + " to the list of available catalog replicas.")
@@ -106,8 +106,6 @@ def search(topic: str) -> str:
     topic_query = {
         "topic": topic
     }
-
-    print(server_location)
 
     try:
         search_start = time.perf_counter_ns()
@@ -224,7 +222,7 @@ if __name__ == "__main__":
 
     # Background scheduler that checks for heartbeat every 10 seconds
     scheduler = BackgroundScheduler()
-    job = scheduler.add_job(check_heartbeat, 'interval', seconds=2)
+    job = scheduler.add_job(check_heartbeat, 'interval', seconds=60)
     scheduler.start()
 
     app.run(host='0.0.0.0', port=FRONTEND_PORT)

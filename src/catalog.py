@@ -1,11 +1,11 @@
 from flask import Flask, request
+import requests
 import yaml
 import json
 import threading
 import logging
 import sys
 import time
-import requests
 
 # Define Flask frontend
 app = Flask("catalog")
@@ -145,7 +145,7 @@ def sync_entire():
         if catalog_replica != local_catalog_server:
             try:
                 response = requests.get("http://" + catalog_replica + "/download/"
-                                        + "catalog" + str(catalog_replica_list.index(catalog_replica)+1) + "_db.txt")
+                                        + "catalog" + str(catalog_replica_list.index(catalog_replica)) + "_db.txt")
                 local_db = app.config.get("name") + "_db.txt"
                 with open(local_db, "wb") as db:
                     db.write(response.content)
@@ -334,6 +334,6 @@ if __name__ == "__main__":
 
     time.sleep(5)
     broadcast_coordinator()
+    sync_entire()
 
-    # TODO: some kind of download mechanism here to sync with other database on crash
     app.run(host='0.0.0.0', port=app.config.get("local_port"), threaded=True)

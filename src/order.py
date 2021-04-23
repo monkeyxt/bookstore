@@ -122,7 +122,7 @@ def sync_entire():
         if order_replica != local_order_server:
             try:
                 response = requests.get("http://" + order_replica + "/download/"
-                                        + "order" + str(order_replica_list.index(order_replica)+1) + "_db.txt")
+                                        + "order" + str(order_replica_list.index(order_replica)) + "_db.txt")
                 local_db = app.config.get("name") + "_db.txt"
                 with open(local_db, "wb") as db:
                     db.write(response.content)
@@ -302,8 +302,8 @@ if __name__ == "__main__":
     load_config()
 
     # Wait until the other replicas boot up. Then broadcast the primary and sync databases.
-    #time.sleep(5)
-    #broadcast_coordinator()
-    #sync_entire()
+    time.sleep(5)
+    broadcast_coordinator()
+    sync_entire()
 
     app.run(host='0.0.0.0', port=app.config["local_port"])
