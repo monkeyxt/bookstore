@@ -86,12 +86,12 @@ def check_heartbeat():
 
 
 # Invalidate a frontend cache. The parameters could be a topic or an item number.
-@app.route("/invalidate/<key>", methods=["PUT"])
+@app.route("/invalidate/<key>", methods=["POST"])
 def invalidate(key):
     if key in cache:
         del cache[key]
         return "Entry " + key + " deleted."
-    return "Entry" + key + "not in cache."
+    return "Entry " + key + " not in cache."
 
 
 # Search for the requested topic
@@ -136,8 +136,8 @@ def search(topic: str) -> str:
 @app.route("/lookup/<int:item_number>")
 def lookup(item_number):
     # Check cache to see if item_number is in cache
-    if item_number in cache:
-        return cache[item_number]
+    if str(item_number) in cache:
+        return cache[str(item_number)]
 
     title = book_titles[int(item_number)]
     logging.info(f"Looking up item: {title}")
@@ -160,7 +160,7 @@ def lookup(item_number):
             lookup_result.extend(["Stock: ", str(books[book]["stock"]), "\n"])
 
         final_result = "".join(lookup_result)
-        cache[item_number] = final_result
+        cache[str(item_number)] = final_result
 
         # Return the lookup result in a string
         return final_result + "\n" + "Elapsed time (lookup): " + str(lookup_elapsed)

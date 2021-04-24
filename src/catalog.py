@@ -295,7 +295,7 @@ def update(item_number, attribute, operation, number):
         sync_order(order)
 
         #  Invalidate the frontend cache
-        response = requests.put("http://" + FRONTEND_IP + "/invalidate/" + str(item_number))
+        response = requests.post("http://" + FRONTEND_IP + "/invalidate/" + str(item_number)).text
         print(response)
 
         if status:
