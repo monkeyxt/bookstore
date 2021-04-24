@@ -262,39 +262,40 @@ def update(item_number, attribute, operation, number):
 
     # If the current machine is not the primary replica forward the request
     if app.config.get("primary_catalog") != app.config.get("local_ip"):
-        response = forward_query(item_number, attribute, operation, number, app.config.get("primary_order"))
-        return response
-    # Else the current server is the primary replica, execute locally
-    elif "replicate" not in request.path:
-        with books_lock:
-            order_id = get_order_num() + 1
-            if operation == "increase":
-                for book in books:
-                    if str(books[book]["item_number"] == str(item_number)):
-                        books[book][attribute] += number
-                        status = True
-
-            elif operation == "decrease":
-                for book in books:
-                    if str(books[book]["item_number"]) == str(item_number):
-                        if books[book][attribute] > 0:
-                            books[book][attribute] -= number
-                            print(books[book][attribute])
+        if "replicate" in request.path:
+            with books_lock:
+                order_id = get_order_num() + 1
+                if operation == "increase":
+                    for book in books:
+                        if str(books[book]["item_number"] == str(item_number)):
+                            books[book][attribute] += number
                             status = True
-                        else:
-                            status = False
 
-        order = create_order(order_id, item_number, attribute, operation, number, status)
-        log_order(order)
-        if status:
-            return {
-                "status": True,
-            }
+                elif operation == "decrease":
+                    for book in books:
+                        if str(books[book]["item_number"]) == str(item_number):
+                            if books[book][attribute] > 0:
+                                books[book][attribute] -= number
+                                print(books[book][attribute])
+                                status = True
+                            else:
+                                status = False
+
+            order = create_order(order_id, item_number, attribute, operation, number, status)
+            log_order(order)
+            if status:
+                return {
+                    "status": True,
+                }
+            else:
+                return {
+                    "status": False,
+                }
+
         else:
-            return {
-                "status": False,
-            }
-
+            response = forward_query(item_number, attribute, operation, number, app.config.get("primary_order"))
+            return response
+    # Else the current server is the primary replica, execute locally
     else:
         with books_lock:
             order_id = get_order_num() + 1
