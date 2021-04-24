@@ -20,12 +20,13 @@ docker run -p 9005:9005 catalog catalog2
 
 Then, you can run `python client.py buy 1` to buy the book with ID 1, or you can get creative and use other numbers, like 2!
 
-## How to run
-Run the `run_all.sh` script in the `tests` directory to build and deploy.
-More detailed information is available in the design documents in the `docs` directory.
-Make sure to specify the desired server addresses in `src/config.yml`.
-
-## How to test
-Unit tests can be run individually using tests in `tests/unit`.
-More detailed information is available in the test documents in the `docs` directory.
-
+## How to run (python)
+First make sure you have python and all dependencies installed.
+Then, navigate to the `src` directory and run the following:
+```sh
+python catalog.py catalog1
+python catalog.py catalog2
+python order.py order1
+python order.py order2
+python frontend.py
+```

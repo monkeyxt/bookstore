@@ -4,5 +4,6 @@ RUN pip install --no-cache-dir flask requests pyyaml apscheduler
 
 COPY ./frontend.py .
 COPY ./config.yml .
+RUN mkdir logs
 
 CMD [ "python", "./frontend.py"]
