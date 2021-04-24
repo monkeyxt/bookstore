@@ -1,9 +1,9 @@
 FROM python:3
 
-ARG NAME="catalog1"
 RUN pip install --no-cache-dir flask requests pyyaml
 
 COPY ./catalog.py .
 COPY ./config.yml .
+RUN mkdir databases
 
-CMD [ "python", "./catalog.py", NAME]
+ENTRYPOINT [ "python", "./catalog.py"]
