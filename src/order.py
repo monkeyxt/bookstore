@@ -57,8 +57,7 @@ def broadcast_coordinator():
     for order_replica in order_replica_list:
         if order_replica != local_order_server:
             try:
-                print("notifying " + order_replica + " and we are " + local_order_server + " and primary is " + app.config.get("primary_order"))
-                requests.get("http://" + order_replica + "/notify/" + app.config.get("primary_order"))
+                requests.get("http://" + str(order_replica) + "/notify/" + app.config.get("primary_order"))
             except requests.exceptions.ConnectionError:
                 print("The other replica is down. Failed to notify")
 
@@ -67,13 +66,15 @@ def broadcast_coordinator():
 @app.route("/notify/<primary>", methods=["GET"])
 def notify(primary):
     app.config["primary_order"] = primary
-    return primary
+    return {
+        "status": True,
+    }
 
 
 # Forwarding the query to the primary order replica
 def forward_query(item_number, primary):
     try:
-        response = requests.post("http://" + primary + '/buy/' + item_number).json()
+        response = requests.post("http://" + str(primary) + "/buy/" + str(item_number)).json()
         return response
     except requests.exceptions.ConnectionError:
         # Primary order server is down, make self primary and try again
@@ -94,9 +95,7 @@ def sync_order(order):
     for order_replica in order_replica_list:
         if order_replica != local_order_server:
             try:
-                requests.post(
-                    "http://" + order_replica + '/replicate/' + order_id + '/' + processing_time + '/' + item_number
-                    + '/' + title + '/' + status).json()
+                requests.post("http://" + str(order_replica) + "/replicate/" + str(order_id) + "/" + str(processing_time) + "/" + str(item_number) + "/" + str(title) + "/" + str(status)).json()
             except requests.exceptions.ConnectionError:
                 print("The other replica is down. Failed to sync order")
                 return
@@ -104,7 +103,7 @@ def sync_order(order):
 
 
 # Replicate the order from another server and store in local log to be consistent
-@app.route("/replicate/<order_id>/<processing_time>/<item_number>/<title>/<status>")
+@app.route("/replicate/<order_id>/<processing_time>/<item_number>/<title>/<status>", methods=["POST"])
 def replicate(order_id, processing_time, item_number, title, status):
     order_id = int(order_id)
     processing_time = float(processing_time)
@@ -112,7 +111,9 @@ def replicate(order_id, processing_time, item_number, title, status):
 
     order = create_order(order_id, processing_time, item_number, title, status)
     log_order(order)
-    return
+    return {
+        "status": True,
+    }
 
 
 # Sync entire database from another replica
@@ -122,7 +123,7 @@ def sync_entire():
     for order_replica in order_replica_list:
         if order_replica != local_order_server:
             try:
-                response = requests.get("http://" + order_replica + "/download/" + "order" + str(order_replica_list.index(order_replica)+1) + "_db.txt")
+                response = requests.get("http://" + str(order_replica) + "/download/order" + str(order_replica_list.index(order_replica)+1) + "_db.txt")
                 local_db = "databases/" + app.config.get("name") + "_db.txt"
                 with open(local_db, "wb") as db:
                     db.write(response.content)
@@ -205,7 +206,7 @@ def query_catalog_server(item_number):
         "item_number": item_number
     }
     try:
-        response = requests.post("http://" + primary + '/query/', json=item_query).json()
+        response = requests.post("http://" + str(primary) + "/query/", json=item_query).json()
         book = list(response.keys())[0]
         amount = list(response.values())[0]["stock"]
         cost = list(response.values())[0]["price"]
@@ -223,8 +224,7 @@ def query_catalog_server(item_number):
 
 # Decrease the catalog server and return the new quantity
 def decrement_catalog_server(item_number):
-    response = requests.post(
-        "http://" + app.config.get("assigned_catalog") + '/update/' + str(item_number) + '/stock/decrease/1').json()
+    response = requests.post("http://" + app.config.get("assigned_catalog") + "/update/" + str(item_number) + "/stock/decrease/1").json()
     return response["status"]
 
 

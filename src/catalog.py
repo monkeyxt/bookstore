@@ -93,7 +93,7 @@ def broadcast_coordinator():
     for catalog_replica in catalog_replica_list:
         if catalog_replica != local_catalog_server:
             try:
-                requests.get("http://" + catalog_replica + "/notify/" + app.config.get("primary_catalog"))
+                requests.get("http://" + str(catalog_replica) + "/notify/" + app.config.get("primary_catalog"))
             except requests.exceptions.ConnectionError:
                 print("The other catalog replica is down. Failed to notify")
 
@@ -102,14 +102,15 @@ def broadcast_coordinator():
 @app.route("/notify/<primary>", methods=["GET"])
 def notify(primary):
     app.config["primary_catalog"] = primary
-    return primary
+    return {
+        "status": True,
+    }
 
 
 # Forwarding the query to the primary catalog replica
 def forward_query(item_number, attribute, operation, number, primary):
     try:
-        response = requests.post(
-            "http://" + primary + '/update/' + item_number + '/' + attribute + '/' + operation + '/' + number).json()
+        response = requests.post("http://" + str(primary) + "/update/" + str(item_number) + "/" + str(attribute) + "/" + str(operation) + "/" + str(number)).json()
         return response
     except requests.exceptions.ConnectionError:
         # Primary catalog server is down, make self primary and try again
@@ -129,7 +130,7 @@ def sync_order(order):
     for catalog_replica in catalog_replica_list:
         if catalog_replica != local_catalog_server:
             try:
-                requests.post( "http://" + catalog_replica + '/update/' + item_number + '/' + attribute + '/' + operation + '/' + number).json()
+                response = requests.post("http://" + str(catalog_replica) + "/replicate/" + str(item_number) + "/" + str(attribute) + "/" + str(operation) + "/" + str(number)).json()
             except requests.exceptions.ConnectionError:
                 print("The other replica is down. Failed to sync order")
                 return
@@ -143,7 +144,7 @@ def sync_entire():
     for catalog_replica in catalog_replica_list:
         if catalog_replica != local_catalog_server:
             try:
-                response = requests.get("http://" + catalog_replica + "/download/" + "catalog" + str(catalog_replica_list.index(catalog_replica)+1) + "_db.txt")
+                response = requests.get("http://" + str(catalog_replica) + "/download/catalog" + str(catalog_replica_list.index(catalog_replica)+1) + "_db.txt")
                 local_db = "databases/" + app.config.get("name") + "_db.txt"
                 with open(local_db, "wb") as db:
                     db.write(response.content)
@@ -245,8 +246,8 @@ def query():
 
 
 # Updating an endpoint/Replicating an order
+@app.route("/replicate/<item_number>/<attribute>/<operation>/<int:number>", methods=["POST"])
 @app.route("/update/<item_number>/<attribute>/<operation>/<int:number>", methods=["POST"])
-@app.route("/replicate/<item_number>/<attribute>/<operation>/<int:number>", methods=["PUT"])
 def update(item_number, attribute, operation, number):
 
     # Check to make sure that the operation is valid
@@ -264,6 +265,36 @@ def update(item_number, attribute, operation, number):
         response = forward_query(item_number, attribute, operation, number, app.config.get("primary_order"))
         return response
     # Else the current server is the primary replica, execute locally
+    elif "replicate" not in request.path:
+        with books_lock:
+            order_id = get_order_num() + 1
+            if operation == "increase":
+                for book in books:
+                    if str(books[book]["item_number"] == str(item_number)):
+                        books[book][attribute] += number
+                        status = True
+
+            elif operation == "decrease":
+                for book in books:
+                    if str(books[book]["item_number"]) == str(item_number):
+                        if books[book][attribute] > 0:
+                            books[book][attribute] -= number
+                            print(books[book][attribute])
+                            status = True
+                        else:
+                            status = False
+
+        order = create_order(order_id, item_number, attribute, operation, number, status)
+        log_order(order)
+        if status:
+            return {
+                "status": True,
+            }
+        else:
+            return {
+                "status": False,
+            }
+
     else:
         with books_lock:
             order_id = get_order_num() + 1
