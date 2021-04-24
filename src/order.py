@@ -225,8 +225,7 @@ def query_catalog_server(item_number):
 def decrement_catalog_server(item_number):
     response = requests.post(
         "http://" + app.config.get("assigned_catalog") + '/update/' + str(item_number) + '/stock/decrease/1').json()
-    status = list(response.values())[0]["status"]
-    return status
+    return response["status"]
 
 
 @app.route("/buy/<int:item_number>", methods=["POST"])

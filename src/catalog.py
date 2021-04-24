@@ -269,19 +269,19 @@ def update(item_number, attribute, operation, number):
     # Else the current server is the primary replica, execute locally
     else:
         with books_lock:
-            status = False
             order_id = get_order_num() + 1
             if operation == "increase":
-                for key, value in books.items():
-                    if value["item_number"] == item_number:
-                        value[attribute] += number
+                for book in books:
+                    if str(books[book]["item_number"] == str(item_number)):
+                        books[book][attribute] += number
                         status = True
 
             elif operation == "decrease":
-                for key, value in books.items():
-                    if value["item_number"] == item_number:
-                        if value[attribute] > 0:
-                            value[attribute] -= number
+                for book in books:
+                    if str(books[book]["item_number"]) == str(item_number):
+                        if books[book][attribute] > 0:
+                            books[book][attribute] -= number
+                            print(books[book][attribute])
                             status = True
                         else:
                             status = False
@@ -296,6 +296,7 @@ def update(item_number, attribute, operation, number):
 
         #  Invalidate the frontend cache
         response = requests.put("http://" + FRONTEND_IP + "/invalidate/" + str(item_number))
+        print(response)
 
         if status:
             return {
