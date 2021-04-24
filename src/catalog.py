@@ -115,7 +115,7 @@ def forward_query(item_number, attribute, operation, number, primary):
     except requests.exceptions.ConnectionError:
         # Primary catalog server is down, make self primary and try again
         app.config["primary_catalog"] = app.config.get("local_ip")
-        return forward_query(item_number, attribute, operation, number, app.config.get("primary_order"))
+        return forward_query(item_number, attribute, operation, number, app.config.get("primary_catalog"))
 
 
 # Sync an order to another other replica by calling the same function as update on the other replica
@@ -144,11 +144,13 @@ def sync_entire():
     for catalog_replica in catalog_replica_list:
         if catalog_replica != local_catalog_server:
             try:
-                response = requests.get("http://" + str(catalog_replica) + "/download/catalog" + str(catalog_replica_list.index(catalog_replica)+1) + "_db.txt")
+                response = requests.get("http://" + str(catalog_replica) + "/download/catalog" + str(catalog_replica_list.index(catalog_replica)+1) + "_db.txt").json()
+                books.update(response["books"])
                 local_db = "databases/" + app.config.get("name") + "_db.txt"
                 with open(local_db, "wb") as db:
-                    db.write(response.content)
+                    db.write(bytes(response["file_data"], 'utf-8'))
                     return
+
             except requests.exceptions.ConnectionError:
                 print(catalog_replica + " is down")
                 return
@@ -158,14 +160,15 @@ def sync_entire():
 
 
 # Download entire database to another replica
-@app.route("/download/<filename>")
+@app.route("/download/<filename>", methods=["GET"])
 def download(filename):
-    with database_lock:
-        file_data = codecs.open("databases/" + filename, 'rb').read()
-    response = make_response()
-    response.data = file_data
-    return response
-
+    with books_lock:
+        with database_lock:
+            file_data = codecs.open("databases/" + filename, 'rb').read()
+            return {
+                "file_data": file_data.decode('utf-8'),
+                "books": books,
+            }
 
 # Respond to ping messages
 @app.route("/ping/", methods=["POST"])
@@ -227,16 +230,18 @@ def query():
     query_data = json.loads(request.data)
     if "topic" in query_data.keys():
         topic = query_data["topic"]
-        for key, value in books.items():
-            if value["topic"] == topic:
-                output[key] = value
+        with books_lock:
+            for key, value in books.items():
+                if value["topic"] == topic:
+                    output[key] = value
 
     # If the request payload specifies an item number, grab all entries with that item number
     elif "item_number" in query_data.keys():
         item_number = query_data["item_number"]
-        for key, value in books.items():
-            if value["item_number"] == item_number:
-                output[key] = value
+        with books_lock:
+            for key, value in books.items():
+                if value["item_number"] == item_number:
+                    output[key] = value
 
     # If no matches are found in the search, print a message
     if len(output) == 0:
@@ -293,7 +298,7 @@ def update(item_number, attribute, operation, number):
                 }
 
         else:
-            response = forward_query(item_number, attribute, operation, number, app.config.get("primary_order"))
+            response = forward_query(item_number, attribute, operation, number, app.config.get("primary_catalog"))
             return response
     # Else the current server is the primary replica, execute locally
     else:
