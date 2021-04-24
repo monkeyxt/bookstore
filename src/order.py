@@ -57,6 +57,7 @@ def broadcast_coordinator():
     for order_replica in order_replica_list:
         if order_replica != local_order_server:
             try:
+                print("notifying " + order_replica + " and we are " + local_order_server + " and primary is " + app.config.get("primary_order"))
                 requests.get("http://" + order_replica + "/notify/" + app.config.get("primary_order"))
             except requests.exceptions.ConnectionError:
                 print("The other replica is down. Failed to notify")
@@ -66,7 +67,7 @@ def broadcast_coordinator():
 @app.route("/notify/<primary>", methods=["GET"])
 def notify(primary):
     app.config["primary_order"] = primary
-    return
+    return primary
 
 
 # Forwarding the query to the primary order replica
@@ -121,9 +122,8 @@ def sync_entire():
     for order_replica in order_replica_list:
         if order_replica != local_order_server:
             try:
-                response = requests.get("http://" + order_replica + "/download/"
-                                        + "order" + str(order_replica_list.index(order_replica)) + "_db.txt")
-                local_db = app.config.get("name") + "_db.txt"
+                response = requests.get("http://" + order_replica + "/download/" + "order" + str(order_replica_list.index(order_replica)+1) + "_db.txt")
+                local_db = "databases/" + app.config.get("name") + "_db.txt"
                 with open(local_db, "wb") as db:
                     db.write(response.content)
                     print(local_order_server + " successfully synced with primary replica.")
@@ -139,7 +139,7 @@ def sync_entire():
 # Download entire database to another replica
 @app.route("/download/<filename>")
 def download(filename):
-    file_data = codecs.open(filename, 'rb').read()
+    file_data = codecs.open("databases/" + filename, 'rb').read()
     response = make_response()
     response.data = file_data
     return response

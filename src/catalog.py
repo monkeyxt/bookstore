@@ -98,11 +98,11 @@ def broadcast_coordinator():
                 print("The other catalog replica is down. Failed to notify")
 
 
-# Get notified who is the primary catalog replica
+# Get notified who is the primary catalog replica.
 @app.route("/notify/<primary>", methods=["GET"])
 def notify(primary):
     app.config["primary_catalog"] = primary
-    return
+    return primary
 
 
 # Forwarding the query to the primary catalog replica
@@ -129,9 +129,7 @@ def sync_order(order):
     for catalog_replica in catalog_replica_list:
         if catalog_replica != local_catalog_server:
             try:
-                requests.post(
-                    "http://" + catalog_replica + '/update/' + item_number + '/' + attribute + '/' + operation
-                    + '/' + number).json()
+                requests.post( "http://" + catalog_replica + '/update/' + item_number + '/' + attribute + '/' + operation + '/' + number).json()
             except requests.exceptions.ConnectionError:
                 print("The other replica is down. Failed to sync order")
                 return
@@ -145,9 +143,8 @@ def sync_entire():
     for catalog_replica in catalog_replica_list:
         if catalog_replica != local_catalog_server:
             try:
-                response = requests.get("http://" + catalog_replica + "/download/"
-                                        + "catalog" + str(catalog_replica_list.index(catalog_replica)) + "_db.txt")
-                local_db = app.config.get("name") + "_db.txt"
+                response = requests.get("http://" + catalog_replica + "/download/" + "catalog" + str(catalog_replica_list.index(catalog_replica)+1) + "_db.txt")
+                local_db = "databases/" + app.config.get("name") + "_db.txt"
                 with open(local_db, "wb") as db:
                     db.write(response.content)
                     return
@@ -163,7 +160,7 @@ def sync_entire():
 @app.route("/download/<filename>")
 def download(filename):
     with database_lock:
-        file_data = codecs.open(filename, 'rb').read()
+        file_data = codecs.open("databases/" + filename, 'rb').read()
     response = make_response()
     response.data = file_data
     return response

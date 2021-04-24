@@ -6,5 +6,6 @@ pkgs.mkShell {
     pkgs.python3Packages.requests
     pkgs.python3Packages.pyyaml
     pkgs.python3Packages.jedi
+    pkgs.python3Packages.APScheduler
   ];
 }
