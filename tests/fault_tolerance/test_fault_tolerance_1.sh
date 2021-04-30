@@ -1,5 +1,5 @@
 #!/bin/bash
-# This tests test for fault tolerance capabilities of the system. This script crashes the secondary replica
+# This tests test for fault tolerance capabilities of the system. This script crashes the primary replica.
 
 # Get config file path
 config=$1
@@ -44,4 +44,3 @@ python3 client.py buy 6 &
 python3 client.py buy 4
 
 # Check database consistency by sending a download request to both servers
-
