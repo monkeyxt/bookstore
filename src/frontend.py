@@ -5,6 +5,7 @@ import yaml
 import random
 import logging
 from apscheduler.schedulers.background import BackgroundScheduler
+import sys
 
 # Define Flask frontend
 app = Flask("frontend")
@@ -41,6 +42,9 @@ book_titles = {
 
 # Define local cache
 cache = {}
+
+# Define do_caching, which if false disables caching
+do_caching = True
 
 # Initializers for performance logger
 perf_logger = logging.getLogger("perf")
@@ -88,6 +92,8 @@ def check_heartbeat():
 # Invalidate a frontend cache. The parameters could be a topic or an item number.
 @app.route("/invalidate/<key>", methods=["POST"])
 def invalidate(key):
+    if not do_caching:
+        return "Caching not enabled"
     if key in cache:
         del cache[key]
         return "Entry " + key + " deleted."
@@ -98,8 +104,9 @@ def invalidate(key):
 @app.route("/search/<topic>")
 def search(topic: str) -> str:
     # Check cache if the topic is in cache
-    if topic in cache:
-        return cache[topic]
+    if do_caching:
+        if topic in cache:
+            return cache[topic]
 
     logging.info(f"Searching for topic: {topic}")
     server_location = get_server_location(available_catalog_list)
@@ -120,7 +127,8 @@ def search(topic: str) -> str:
             search_result.extend(["ID: ", str(books[book]['item_number']), "\n"])
 
         final_result = "".join(search_result)
-        cache[topic] = final_result
+        if do_caching:
+            cache[topic] = final_result
 
         # Return the search result in a string
         return final_result + "\n" + "Elapsed time (search): " + str(search_elapsed)
@@ -136,8 +144,9 @@ def search(topic: str) -> str:
 @app.route("/lookup/<int:item_number>")
 def lookup(item_number):
     # Check cache to see if item_number is in cache
-    if str(item_number) in cache:
-        return cache[str(item_number)]
+    if do_caching:
+        if str(item_number) in cache:
+            return cache[str(item_number)]
 
     title = book_titles[int(item_number)]
     logging.info(f"Looking up item: {title}")
@@ -160,7 +169,8 @@ def lookup(item_number):
             lookup_result.extend(["Stock: ", str(books[book]["stock"]), "\n"])
 
         final_result = "".join(lookup_result)
-        cache[str(item_number)] = final_result
+        if do_caching:
+            cache[str(item_number)] = final_result
 
         # Return the lookup result in a string
         return final_result + "\n" + "Elapsed time (lookup): " + str(lookup_elapsed)
@@ -215,6 +225,17 @@ if __name__ == "__main__":
     logging.basicConfig(filename=log_path, level=logging.DEBUG, format="%(asctime)s %(message)s")
     FRONTEND_PORT = config['frontend'].split(":")[-1]
     logging.info(f"Frontend server starting on port {FRONTEND_PORT}")
+
+    # Check caching settings
+    if len(sys.argv) > 1:
+        do_cache_str = sys.argv[1].lower()
+        if do_cache_str == "true" or do_cache_str == "t":
+            do_caching = True
+        elif do_cache_str == "false" or do_cache_str == "f":
+            do_caching = False
+    else:
+        do_caching = True
+
 
     # Initially all servers are assumed to be up
     available_order_list = order_replica_list
