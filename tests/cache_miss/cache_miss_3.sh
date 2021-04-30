@@ -5,5 +5,5 @@ cd ../../src/
 
 for i in {1..100}
   do
-    python3 client.py read 1 1 cache3.1
+    python3 client.py lookup 1 1 cache3.1
   done
