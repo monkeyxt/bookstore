@@ -38,9 +38,6 @@ python3 client.py buy 1
 python3 client.py buy 1
 python3 client.py lookup 1
 
-# Wait a few seconds to make sure all requests finish
-sleep 5s
-
 # Restart catalog replica
 echo "Restarting catalog1..."
 python3 catalog.py catalog1 & catalog1_pid=$!
