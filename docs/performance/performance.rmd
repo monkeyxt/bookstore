@@ -11,7 +11,7 @@ header-includes:
   -  \usepackage{hyperref}
   -  \usepackage{graphicx}
 biblio-style: apsr
-title: "CS 677 Lab 2 Performance Evaluation Report"
+title: "CS 677 Lab 3 Performance Evaluation Report"
 author:
 - name: Dan Cline, Kyle Stevens, Tian Xia
   affiliation: UMass Amherst, Amherst College
@@ -50,56 +50,62 @@ library(DiagrammeR)
 ```
 
 
-# Performance of Sequential Requests
+# Performance of Sequential Requests w/wo Caching
 
-In this test, we perform 100 requests of each for all the items and topics, and measure the average latency for each combination of item/topic and requests. The test can be found in `tests/sequential`. The output can be found in `tests/output`.
+In this test, we perform 100 requests of each for all the items and topics, and measure the average latency for each combination of item/topic and requests. The test can be found in `tests/sequential`. The output can be found in `tests/output`. We tested the latency with and without caching by performing the following operations (we only list the lookup lantency for the first four items): 
 
+## Performance of the System with Caching
 item/topic    Response Time of `buy`(s)   Response Time of `lookup`(s)    Response Time of `search`(s)
 -----------   -------------------------   ----------------------------    ----------------------------
-item1         0.035602                    0.014066                        N/A
-item2         0.036503                    0.014149                        N/A
-item3         0.035496                    0.014100                        N/A
-item4         0.034645                    0.014235                        N/A
-gradschool    N/A                         N/A                             0.014113
-systems       N/A                         N/A                             0.014110
+item1         0.145609                    0.015043                        N/A
+item2         0.186815                    0.017289                        N/A
+item3         0.169865                    0.018120                        N/A
+item4         0.158762                    0.014589                        N/A
+gradschool    N/A                         N/A                             0.016642
+systems       N/A                         N/A                             0.016781
 -----------   -------------------------   -------------------------       ----------------------------
 
-\noindent From these numerical results, we can see that the response time for `buy` request is much higher than the response time for `lookup` and `search` requests. This can be attributed to the fact that `buy` requests need to go through another tier (frontend-order-catalog) compared to other requests (frontend-catalog). We also observer that the response time for `lookup` and `search` requests are surprisingly similar. This is mostly likely because these two requests both go through the same number of tiers.
+## Performance of the System without Caching
+item/topic    Response Time of `buy`(s)   Response Time of `lookup`(s)    Response Time of `search`(s)
+-----------   -------------------------   ----------------------------    ----------------------------
+item1         0.147895                    0.047688                        N/A
+item2         0.158601                    0.047280                        N/A
+item3         0.157561                    0.048731                        N/A
+item4         0.164243                    0.048143                        N/A
+gradschool    N/A                         N/A                             0.047666
+systems       N/A                         N/A                             0.048458
+-----------   -------------------------   -------------------------       ----------------------------
+
+\noindent From these numerical results, we can see that caching improves the end-to-end response time on `lookup` and `search` requests, increasing the speed by almost 3 times. There was almost no changes in the end-to-end response time on `buy` requests, which makes intuitive sense since the `buy` requests are not cached and goes through the order server and then the catalog server. 
 
 
-# Performance of Per-tier Sequential Requests
+# Cache Tests
 
-The test can be found in `tests/sequential`. The output can be found in `tests/output`. We only tested the per-tier requests on item 1 and the topic systems since the results for the other items or topics should be more or less uniform. The frontend performance logs can be found on the frontend server. The client-frontend time can be found by subtracting the end-to-end run time with the frontend-catalog time or frontend-order time. The results is as below.
+In this test, we tested write operations w/wo invalidation triggers and read operations w/wo cache misses, sending 100 sequential requests for each and calculating the overhead. 
+
+## Write Operations w/wo Invalidations:
+Operations/Time(s)            Writes wo Invalidation(s)   Writes w Invalidation(s)     Overhead (s)
+---------------------------   --------------------------  ---------------------------  ----------------------------
+Time(s)                       0.153312                    0.150751                     -0.002561
+---------------------------   --------------------------  ---------------------------  ----------------------------
+
+## Read Operations w/wo Cache Hits:
+Operations/Time(s)            Read without Cache Miss(s)   Read with Cache Miss(s)     Overhead (s)
+---------------------------   ---------------------------  --------------------------  ----------------------------
+Time(s)                       0.029069                     0.055862                    +0.026793
+---------------------------   ---------------------------  --------------------------  ----------------------------
+
+\noindent From these results, we see that the overhead for writes that triggers the invalidation is negligible. This is probably because the cache invalidation simply deletes the record from the dictionary and is not a time-consuming operation. We do notice however that reads with cache hit takes less time than reads with cache misses. This makes sense because reads with cache misses forces the request to take another hop from the frontend server to the catalog server, which gives the request an overtime. 
+
+# Fault Tolerance Test
+
+Test Description: In this test, we kill the primary catalog replica and perform updates on the secondary replica for `item 1`. After some time, we bring back the primary catalog replica, and kill the secondary replica. Then we bring back the secondary replica and perform more updates on `item 1`. At the very end, we perform lookup requests on both catalog servers to make sure that the number of items sold is consistent. The test can be found in `tests\fault_tolerance`.
+\
+
+\noindent Test Outcome: After performing the above operations, the number of items remaining in stock for `item 1` is consistent on both servers and matches the number of original stock subtracted by the number of buy operations performed. We conclude that our system is fault tolerant. 
 
 
-Tier                          `buy` item 1(s)           `lookup` item 1(s)      `search` topic systems (s)
----------------------------   ---------------------     --------------------    ----------------------------
-Frontend - Order/buy          0.01029                   N/A                     N/A
-Frontend - Catalog/query      N/A                       0.00814                 0.00714
-Order    - Catalog/update     0.01715                   N/A                     N/A
-Client   - Frontend/lookup    N/A                       0.00678                 N/A
-Client   - Frontend/search    N/A                       N/A                     0.00537
-Client   - Frontend/buy       0.00611                   N/A                     N/A
----------------------------   ---------------------     --------------------    ----------------------------
-\noindent From these numerical results, we can see that the end-to-end response time is roughly split into half per tier for both `lookup` and `search`. This makes intuitive sense because the client needs to go through two layers with similar time cost. The frontend-order seems to be the most time intensive. This is probably because it needs to both query the catalog server and update with a json payload.
 
-
-# Performance of Concurrent Requests
-
-In this test, we ran varying numbers of clients to buy the same item and measured the average end-to-end response time for 100 sequential requests for each spawned client. All test can be found in `tests/concurrent`. The output can be found in `tests/output`.
-
-Number of Concurrent Clients    Average Response Time(s)
-----------------------------    ---------------------
-2                               0.01657
-5                               0.04654
-10                              0.10350
-20                              0.13829
-40                              0.23409
-----------------------------    ---------------------
-
-![Latency for 100 Sequential Lookup Calls](perf1.png)
-
-\noindent From the graph, we can say that the response time increases when the seller receives increasing amount of concurrent requests from buyers.
 
 <!--
 # References
