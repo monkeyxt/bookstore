@@ -1,5 +1,5 @@
 # bookstore
-Book store lab 2 for CS 677
+Book store lab 3 for CS 677
 
 ## Requirements
  - Python 3
@@ -7,23 +7,12 @@ Book store lab 2 for CS 677
  - Docker
 
 ## How to run (docker)
-**NOTE:** these all run, however without proper container networking the services may not be able to talk to each other.
-In order to properly run containers like this, one needs to first get distinct IPs, edit `config.yml`, rebuild docker images, and deploy the containers to each of those IPs.
-Alternatively, if you are on linux, use the host networking option.
-In this case, you would run all the following docker commands with the `--network=host` option.
+**Make sure to put in the server names and the location of ssh key file in the script.**
+To run the services remotely with docker, navigate to the `tests` directory and run `run_remote.sh` which will automatically take care of deployment. Then, you can run `python client.py buy 1` to buy the book with ID 1, or you can get creative and use other numbers, like 2!
 
-First make sure you have docker installed. Then, navigate to the `src` directory.
-To build the docker images, run `bash docker/docker_builds.sh`.
-Finally to run the containers, do the following:
-```sh
-docker run -p 9006:9006 frontend
-docker run -p 9002:9002 order order1
-docker run -p 9003:9003 order order2
-docker run -p 9004:9004 catalog catalog1
-docker run -p 9005:9005 catalog catalog2
-```
+To run all the tests, navigate to the `tests` directory and run `run_tests.sh` which will deploy the source codes and run our curated tests.
 
-Then, you can run `python client.py buy 1` to buy the book with ID 1, or you can get creative and use other numbers, like 2!
+For more information, see the design and performance documentation in the `docs` directory.
 
 ## How to run (python)
 First make sure you have python and all dependencies installed.
@@ -35,3 +24,4 @@ python order.py order1
 python order.py order2
 python frontend.py
 ```
+If you are lazy like me and wants to have an automated process, navigate to the `tests` directory and run `run.sh`. Make sure to put in the server names in the script. Happy online shopping!

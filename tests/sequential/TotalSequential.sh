@@ -4,23 +4,23 @@
 cd ../../src/
 
 echo "1000 sequential request for search operation"
-python3 client.py search systems 1000 c1
-python3 client.py search gradschool 1000 c1
+python3 client.py search systems 100 c1
+python3 client.py search gradschool 100 c1
 
 echo "1000 sequential request for lookup operation"
-python3 client.py lookup 1 1000 c1
-python3 client.py lookup 2 1000 c1
-python3 client.py lookup 3 1000 c1
-python3 client.py lookup 4 1000 c1
-python3 client.py lookup 5 1000 c1
-python3 client.py lookup 6 1000 c1
-python3 client.py lookup 7 1000 c1
+python3 client.py lookup 1 100 c1
+python3 client.py lookup 2 100 c1
+python3 client.py lookup 3 100 c1
+python3 client.py lookup 4 100 c1
+python3 client.py lookup 5 100 c1
+python3 client.py lookup 6 100 c1
+python3 client.py lookup 7 100 c1
 
 echo "1000 sequential request for buy operation"
-python3 client.py buy 1 1000 c1
-python3 client.py buy 2 1000 c1
-python3 client.py buy 3 1000 c1
-python3 client.py buy 4 1000 c1
-python3 client.py buy 5 1000 c1
-python3 client.py buy 6 1000 c1
-python3 client.py buy 7 1000 c1
+python3 client.py buy 1 100 c1
+python3 client.py buy 2 100 c1
+python3 client.py buy 3 100 c1
+python3 client.py buy 4 100 c1
+python3 client.py buy 5 100 c1
+python3 client.py buy 6 100 c1
+python3 client.py buy 7 100 c1
