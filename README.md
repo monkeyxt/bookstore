@@ -7,7 +7,7 @@ Book store lab 3 for CS 677
  - Docker
 
 ## How to run (docker)
-**Make sure to put in the server names and the location of ssh key file i the script.**
+**Make sure to put in the server names and the location of ssh key file in the script.**
 To run the services remotely with docker, navigate to the directory `/tests` and run `run_remote.sh` which will automatically take care of deployment. Then, you can run `python client.py buy 1` to buy the book with ID 1, or you can get creative and use other numbers, like 2!
 
 To run all the tests, navigate to the `tests` directory and run `run_tests.sh` which will deploy the source codes and run our curated tests.
