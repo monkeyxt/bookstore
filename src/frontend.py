@@ -243,7 +243,7 @@ if __name__ == "__main__":
 
     # Background scheduler that checks for heartbeat every 10 seconds
     scheduler = BackgroundScheduler()
-    job = scheduler.add_job(check_heartbeat, 'interval', seconds=60)
+    job = scheduler.add_job(check_heartbeat, 'interval', seconds=10)
     scheduler.start()
 
     app.run(host='0.0.0.0', port=FRONTEND_PORT)

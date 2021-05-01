@@ -32,10 +32,15 @@ echo "Killing catalog1..."
 kill $catalog1_pid
 
 # Perform buy and lookup requests to ensure replica is functioning properly
+echo "Performing lookup 1..."
 python3 client.py lookup 1
+echo "Performing buy 1..."
 python3 client.py buy 1
+echo "Performing buy 2..."
 python3 client.py buy 1
+echo "Performing buy 3..."
 python3 client.py buy 1
+echo "Performing lookup 2..."
 python3 client.py lookup 1
 
 # Restart catalog replica
@@ -43,6 +48,7 @@ echo "Restarting catalog1..."
 python3 catalog.py catalog1 & catalog1_pid=$!
 
 # Wait to allow server to start and synchronize
+echo "Allowing servers time to sync..."
 sleep 10s
 
 # Kill secondary replica
@@ -52,11 +58,19 @@ kill $catalog2_pid
 echo "Restarting catalog2..."
 python3 catalog.py catalog2 & catalog2_pid=$!
 
+echo "Allowing servers time to sync..."
+sleep 10s
+
 # Perform buy and lookup requests again to ensure replica is functioning properly
+echo "Performing lookup 3..."
 python3 client.py lookup 1
+echo "Performing buy 4..."
 python3 client.py buy 1
+echo "Performing buy 5..."
 python3 client.py buy 1
+echo "Performing buy 6..."
 python3 client.py buy 1
+echo "Performing lookup 4..."
 python3 client.py lookup 1
 
 
