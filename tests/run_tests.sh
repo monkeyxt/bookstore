@@ -75,8 +75,13 @@ function kill_bookstore() {
     for host in ${HOSTS[@]}; do
         echo "Logging on to $host to kill docker containers..."
         ssh -i $KEY -l ${USERNAME} $host "docker kill \$(docker ps -q)"
+        ssh -i $KEY -l ${USERNAME} $host "docker system prune -f"
     done
 
+    cp tmp_config.yml config.yml
+    rm tmp_config.yml
+
+    exit
 }
 
 # create the remote yaml config
@@ -96,6 +101,10 @@ done
 echo "Config used for deployment:"
 cat remote_config.yml
 
+# copy config to tmp_config.yml, replace with new one
+mv ../src/config.yml ../src/tmp_config.yml
+cp remote_config.yml ../src/config.yml
+
 # Install for each host
 install_pids=()
 for i in $(seq 0 4); do
@@ -114,11 +123,11 @@ done
 wait "${docker_build_pids[@]}"
 
 # make sure we trap here so services will be killed if exiting
-trap kill_bookstore INT TERM EXIT
+trap kill_bookstore INT TERM
 
 # start with catalog stuff
 for i in $(seq 0 1); do
-    ssh -i $KEY -l $USERNAME ${service_hosts[$i]} "docker run -p ${service_ports[$i]}:${service_ports[$i]} catalog ${service_names[$i]}" &
+    ssh -i $KEY -l $USERNAME ${service_hosts[$i]} "docker run --name ${service_names[$i]} -p ${service_ports[$i]}:${service_ports[$i]} catalog ${service_names[$i]}" &
     sleep 0.1s
 done
 
@@ -126,7 +135,7 @@ sleep 0.5s
 
 # now do order stuff
 for i in $(seq 2 3); do
-    ssh -i $KEY -l $USERNAME ${service_hosts[$i]} "docker run -p ${service_ports[$i]}:${service_ports[$i]} order ${service_names[$i]}" &
+    ssh -i $KEY -l $USERNAME ${service_hosts[$i]} "docker run --name ${service_names[$i]} -p ${service_ports[$i]}:${service_ports[$i]} order ${service_names[$i]}" &
     sleep 0.1s
 done
 
@@ -134,13 +143,13 @@ sleep 0.5s
 
 # now do frontend stuff
 for i in $(seq 4 4); do
-    ssh -i $KEY -l $USERNAME ${service_hosts[$i]} "docker run -p ${service_ports[$i]}:${service_ports[$i]} frontend" &
+    ssh -i $KEY -l $USERNAME ${service_hosts[$i]} "docker run --name frontend -p ${service_ports[$i]}:${service_ports[$i]} frontend" &
     sleep 0.1s
 done
 
-sleep 30s
+sleep 10s
 
-cd ../../src/
+cd ../src/
 
 # Cache Hits Test 1
 echo "Running Cache Hits Test 1"
@@ -198,6 +207,12 @@ python3 client.py buy 6 100 c1
 python3 client.py buy 7 100 c1
 
 # Sequential Test Without Cache. Kill frontend here & Restart without cache
+# kill frontend
+ssh -i $KEY -l $USERNAME ${service_hosts[$frontend]} "docker kill frontend"
+sleep 3s
+ssh -i $KEY -l $USERNAME ${service_hosts[$frontend]} "docker run -p ${service_ports[$frontend]}:${service_ports[$frontend]} frontend false" &
+
+sleep 20s
 
 echo "No Cache: 100 sequential request for search operation"
 python3 client.py search systems 100 c1
@@ -226,32 +241,39 @@ sleep 10s
 # Fault Tolerance Test
 
 # Kill the primary catalog server
+ssh -i $KEY -l $USERNAME ${service_hosts[$catalog1]} "docker kill catalog1"
+sleep 10s
 
 # Perform buy and lookup requests to ensure replica is functioning properly
 echo "Performing lookup 1..."
-python3 client.py lookup 1
+python3 client.py lookup 4
 echo "Performing buy 1..."
-python3 client.py buy 1
+python3 client.py buy 4
 echo "Performing buy 2..."
-python3 client.py buy 1
+python3 client.py buy 4
 echo "Performing buy 3..."
-python3 client.py buy 1
+python3 client.py buy 4
 echo "Performing lookup 2..."
-python3 client.py lookup 1
+python3 client.py lookup 4
 
 # Bring back the primary catalog server, wait for them to sync and kill the secondary
-
+ssh -i $KEY -l $USERNAME ${service_hosts[$catalog1]} "docker run -p ${service_ports[$catalog1]}:${service_ports[$catalog1]} catalog catalog1" &
+sleep 20s
+ssh -i $KEY -l $USERNAME ${service_hosts[$catalog2]} "docker kill catalog2"
+sleep 20s
 
 # Perform buy and lookup requests to ensure replica is functioning properly
 echo "Performing lookup 1..."
-python3 client.py lookup 1
+python3 client.py lookup 4
 echo "Performing buy 1..."
-python3 client.py buy 1
+python3 client.py buy 4
 echo "Performing buy 2..."
-python3 client.py buy 1
+python3 client.py buy 4
 echo "Performing buy 3..."
-python3 client.py buy 1
+python3 client.py buy 4
 echo "Performing lookup 2..."
-python3 client.py lookup 1
+python3 client.py lookup 4
 
 sleep 10s
+kill_bookstore
+exit

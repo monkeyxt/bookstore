@@ -6,4 +6,4 @@ COPY ./frontend.py .
 COPY ./config.yml .
 RUN mkdir logs
 
-CMD [ "python", "./frontend.py"]
+ENTRYPOINT [ "python", "./frontend.py"]

@@ -118,7 +118,7 @@ trap kill_bookstore INT TERM EXIT
 
 # start with catalog stuff
 for i in $(seq 0 1); do
-    ssh -i $KEY -l $USERNAME ${service_hosts[$i]} "docker run -p ${service_ports[$i]}:${service_ports[$i]} catalog ${service_names[$i]}" &
+    ssh -i $KEY -l $USERNAME ${service_hosts[$i]} "docker run --name ${service_names[$i]} -p ${service_ports[$i]}:${service_ports[$i]} catalog ${service_names[$i]}" &
     sleep 0.1s
 done
 
@@ -126,7 +126,7 @@ sleep 0.5s
 
 # now do order stuff
 for i in $(seq 2 3); do
-    ssh -i $KEY -l $USERNAME ${service_hosts[$i]} "docker run -p ${service_ports[$i]}:${service_ports[$i]} order ${service_names[$i]}" &
+    ssh -i $KEY -l $USERNAME ${service_hosts[$i]} "docker run --name ${service_names[$i]} -p ${service_ports[$i]}:${service_ports[$i]} order ${service_names[$i]}" &
     sleep 0.1s
 done
 
@@ -134,7 +134,7 @@ sleep 0.5s
 
 # now do frontend stuff
 for i in $(seq 4 4); do
-    ssh -i $KEY -l $USERNAME ${service_hosts[$i]} "docker run -p ${service_ports[$i]}:${service_ports[$i]} frontend" &
+    ssh -i $KEY -l $USERNAME ${service_hosts[$i]} "docker run --name frontend -p ${service_ports[$i]}:${service_ports[$i]} frontend" &
     sleep 0.1s
 done
 

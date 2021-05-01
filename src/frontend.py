@@ -63,17 +63,18 @@ def get_server_location(replica):
 
 # Heartbeat check for both the catalog and order replica
 def check_heartbeat():
+    logging.info("CHECKING HEARTBEAT!!!")
     # Check heartbeat for order replicas
     for order_replica in order_replica_list:
         try:
             response = requests.post("http://" + order_replica + "/ping/").json()
             if (response["status"]) and (order_replica not in available_order_list):
                 available_order_list.append(order_replica)
-                print("Added " + order_replica + " to the list of available order replicas.")
+                logging.info("Added " + order_replica + " to the list of available order replicas.")
         except requests.exceptions.ConnectionError:
             if order_replica in available_order_list:
                 available_order_list.remove(order_replica)
-                print("Removed " + order_replica + " from the list of available order replicas.")
+                logging.info("Removed " + order_replica + " from the list of available order replicas.")
 
     # Check heartbeat for catalog replicas
     for catalog_replica in catalog_replica_list:
@@ -81,11 +82,11 @@ def check_heartbeat():
             response = requests.post("http://" + catalog_replica + "/ping/").json()
             if (response["status"]) and (catalog_replica not in available_catalog_list):
                 available_catalog_list.append(catalog_replica)
-                print("Added " + catalog_replica + " to the list of available catalog replicas.")
+                logging.info("Added " + catalog_replica + " to the list of available catalog replicas.")
         except requests.exceptions.ConnectionError:
             if catalog_replica in available_catalog_list:
                 available_catalog_list.remove(catalog_replica)
-                print("Removed " + catalog_replica + " from the list of available catalog replicas.")
+                logging.info("Removed " + catalog_replica + " from the list of available catalog replicas.")
     return
 
 
@@ -238,12 +239,12 @@ if __name__ == "__main__":
 
 
     # Initially all servers are assumed to be up
-    available_order_list = order_replica_list
-    available_catalog_list = catalog_replica_list
+    available_order_list = order_replica_list.copy()
+    available_catalog_list = catalog_replica_list.copy()
 
     # Background scheduler that checks for heartbeat every 10 seconds
     scheduler = BackgroundScheduler()
-    job = scheduler.add_job(check_heartbeat, 'interval', seconds=10)
+    job = scheduler.add_job(check_heartbeat, 'interval', seconds=3)
     scheduler.start()
 
     app.run(host='0.0.0.0', port=FRONTEND_PORT)
