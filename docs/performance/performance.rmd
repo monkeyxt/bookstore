@@ -52,7 +52,7 @@ library(DiagrammeR)
 
 # Performance of Sequential Requests w/wo Caching
 
-In this test, we perform 100 requests of each for all the items and topics, and measure the average latency for each combination of item/topic and requests. The test can be found in `tests/sequential`. The output can be found in `tests/output`. We tested the latency with and without caching by performing the following operations (we only list the lookup lantency for the first four items): 
+In this test, we perform 100 requests of each for all the items and topics, and measure the average latency for each combination of item/topic and requests. The test can be found in `tests/sequential`. The output can be found in `tests/output`. We tested the latency with and without caching by performing the following operations (we only list the lookup latency for the first four items): 
 
 ## Performance of the System with Caching
 item/topic    Response Time of `buy`(s)   Response Time of `lookup`(s)    Response Time of `search`(s)
@@ -99,10 +99,10 @@ Time(s)                       0.029069                     0.055862             
 
 # Fault Tolerance Test
 
-Test Description: In this test, we kill the primary catalog replica and perform updates on the secondary replica for `item 1`. After some time, we bring back the primary catalog replica, and kill the secondary replica. Then we bring back the secondary replica and perform more updates on `item 1`. At the very end, we perform lookup requests on both catalog servers to make sure that the number of items sold is consistent. The test can be found in `tests\fault_tolerance`.
+Test Description: In this test, we kill the primary catalog replica and perform updates on the secondary replica for `item 1`. After some time, we bring back the primary catalog replica, and kill the secondary replica. Then we bring back the secondary replica and perform more updates on `item 1`. At the very end, we perform lookup requests on both catalog servers to make sure that the number of items sold is consistent. The local test can be found in `tests\fault_tolerance`. The remote test is packaged into the script `run_tests.sh`.
 \
 
-\noindent Test Outcome: After performing the above operations, the number of items remaining in stock for `item 1` is consistent on both servers and matches the number of original stock subtracted by the number of buy operations performed. We conclude that our system is fault tolerant. 
+\noindent Test Outcome: After performing the above operations, the number of items remaining in stock for `item 1` is consistent on both servers and matches the number of original stock subtracted by the number of buy operations performed. On the frontend server, the catalog server, and the alive catalog server, messages show that the killed server is down. After the dead servers come back alive, it successfully notifies the other catalog server that the primary is now `catalog1` as intended. The frontend also adds the revived server to the list of available servers. All of these messages can be checked by sshing into the servers and viewing the log messages. We conclude that our system is fault tolerant. 
 
 
 
