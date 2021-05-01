@@ -1,0 +1,34 @@
+Starting the order server...
+Starting the catalog server...
+Starting the frontend server...
+ * Serving Flask app "order" (lazy loading)
+ * Environment: production
+   WARNING: This is a development server. Do not use it in a production deployment.
+   Use a production WSGI server instead.
+ * Debug mode: off
+ * Serving Flask app "frontend" (lazy loading)
+ * Environment: production
+   WARNING: This is a development server. Do not use it in a production deployment.
+   Use a production WSGI server instead.
+ * Debug mode: off
+ * Serving Flask app "catalog" (lazy loading)
+ * Environment: production
+   WARNING: This is a development server. Do not use it in a production deployment.
+   Use a production WSGI server instead.
+ * Debug mode: off
+Performing client lookup...
+Title: How to get a good grade in 677 in 20 minutes a day
+Price: 3
+Stock: 1011
+
+Elapsed time (lookup): 3345400
+Performing client search...
+systems
+Title: How to get a good grade in 677 in 20 minutes a day ID: 1
+Title: RPC for Dummies ID: 2
+
+Elapsed time (search): 2497400
+Performing client buy...
+Successfully purchased: How to get a good grade in 677 in 20 minutes a day
+Elapsed time (buy, order server): 5614100
+Elapsed time (buy, frontend server): 8382600

@@ -198,6 +198,7 @@ python3 client.py buy 6 100 c1
 python3 client.py buy 7 100 c1
 
 # Sequential Test Without Cache. Kill frontend here & Restart without cache
+
 echo "No Cache: 100 sequential request for search operation"
 python3 client.py search systems 100 c1
 python3 client.py search gradschool 100 c1
