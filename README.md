@@ -1,5 +1,5 @@
 # bookstore
-Book store lab 3 for CS 677
+A distributed book store featuring cache consistency, replication and fault tolerance.
 
 ## Requirements
  - Python 3
